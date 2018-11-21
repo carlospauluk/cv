@@ -1,7 +1,7 @@
 {
   "devDependencies": {
     "@coreui/coreui": "^2.1.1",
-    "bootstrap": "4",
+    "bootstrap": ">=4.1.2",
     "copy-webpack-plugin": "^4.6.0",
     "datatables": "^1.10.18",
     "flag-icon": "^2.5.0",
@@ -16,6 +16,7 @@
     "sass-loader": "^7.1.0",
     "select2": "3",
     "simple-line-icons": "^2.4.1",
-    "webpack-notifier": "^1.7.0"
+    "webpack-notifier": "^1.7.0",
+    "webpack": "^4.26.0"
   }
 }
