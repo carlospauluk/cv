@@ -57,7 +57,8 @@ class FormController extends Controller
             $secret = getenv('GOOGLE_RECAPTCHA_SECRET');
             $gRecaptchaResponse = $request->get('g-recaptcha-response');
             $recaptcha = new ReCaptcha($secret);
-            $resp = $recaptcha->setExpectedHostname('dev.cv.casabonsucesso.com.br')
+            $urlSistema = getenv('URL_SISTEMA');
+            $resp = $recaptcha->setExpectedHostname($urlSistema)
                 ->verify($gRecaptchaResponse, $request->server->get('REMOTE_ADDR'));
             if (!$resp->isSuccess()) {
 //                $errors = $resp->getErrorCodes();
@@ -115,6 +116,17 @@ class FormController extends Controller
             }
             return $this->render('landpage.html.twig', $vParams);
         }
+    }
+
+    /**
+     *
+     * @Route("/", name="inicio")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function confirmEmail(Request $request)
+    {
+
     }
 
     /**
