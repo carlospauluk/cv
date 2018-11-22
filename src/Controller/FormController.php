@@ -120,7 +120,7 @@ class FormController extends Controller
 
     /**
      *
-     * @Route("/", name="inicio")
+     * @Route("/confirmEmail", name="confirmEmail")
      * @param Request $request
      * @return \Symfony\Component\HttpFoundation\Response
      */
