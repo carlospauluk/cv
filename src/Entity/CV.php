@@ -470,6 +470,13 @@ class CV
      */
     private $emailConfirmado;
 
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="email_confirm_uuid", type="string", length=45, nullable=false)
+     */
+    private $emailConfirmUUID;
+
 
     public function __construct()
     {
@@ -1469,6 +1476,22 @@ class CV
     public function setEmailConfirmado(string $emailConfirmado): void
     {
         $this->emailConfirmado = $emailConfirmado;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEmailConfirmUUID(): string
+    {
+        return $this->emailConfirmUUID;
+    }
+
+    /**
+     * @param string $emailConfirmUUID
+     */
+    public function setEmailConfirmUUID(string $emailConfirmUUID): void
+    {
+        $this->emailConfirmUUID = $emailConfirmUUID;
     }
 
 

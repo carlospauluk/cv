@@ -3,10 +3,13 @@
 namespace App\Controller;
 
 use App\Business\CVBusiness;
+use App\Entity\CV;
+use Psr\Log\LoggerInterface;
 use ReCaptcha\ReCaptcha;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 
 class FormController extends Controller
 {
@@ -19,26 +22,49 @@ class FormController extends Controller
      *
      * @Route("/", name="inicio")
      * @param Request $request
+     * @param string $step
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function inicio(Request $request)
+    public function inicio(Request $request, $step = "land")
     {
+        /**
+         * steps: land, iniciado, emailConfirmEnviado, login.
+         **/
         $vParams = [];
-        $vParams['iniciado'] = false;
-        $vParams['cadastroOk'] = false;
-        $vParams['emailConfirmEnviado'] = false;
+
+        $vParams['cpf'] = preg_replace('/[^\d]/', '', $request->get('cpf'));
+        $vParams['email'] = $request->get('email');
+        $vParams['password'] = $request->get('password');
+        $vParams['password2'] = $request->get('password2');
+        $vParams['email'] = $request->get('email');
 
         if ($request->get('btnIniciar')) {
-            return $this->handleInicio($request, $vParams);
-        } else if ($request->get('btnLogin')) {
-            return $this->handleLogin($request, $vParams);
-        } else if ($request->get('btnEsqueciSenha')) {
-            return $this->handleEsqueciSenha($request, $vParams);
+            // estava no 'land' e clicou em 'Iniciar'
+            $this->handleInicio($request, $vParams);
+            if (!isset($vParams['cadastroOk'])) {
+                $step = 'land';
+            } else if ($vParams['cadastroOk']) {
+                $step = 'login';
+            } else {
+                $step = 'iniciado';
+            }
         } else if ($request->get('btnNovo')) {
-            return $this->handleNovo($request, $vParams);
-        } else {
-            return $this->render('landpage.html.twig', $vParams);
+            // estava no 'iniciar' e clicou em 'Novo'
+            $this->handleNovo($request, $vParams);
+            if ($vParams['cadastroIniciado']) {
+                $step = 'emailConfirmEnviado';
+            } else {
+                $step = 'iniciado';
+            }
+        } else if ($request->get('btnLogin')) {
+            // estava no login e clicou em 'Entrar'
+            if ($this->handleLogin($request, $vParams)) {
+                $this->redirectToRoute('form', ['cv' => null]);
+            }
         }
+
+        $vParams['step'] = $step;
+        return $this->render('landpage.html.twig', $vParams);
     }
 
     /**
@@ -46,11 +72,10 @@ class FormController extends Controller
      *
      * @param Request $request
      * @param $vParams
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return bool
      */
-    private function handleInicio(Request $request, $vParams) {
-        $vParams['cpf'] = preg_replace('/[^\d]/','', $request->get('cpf'));
-
+    private function handleInicio(Request $request, &$vParams)
+    {
         if (!$request->get('g-recaptcha-response')) {
             $this->addFlash('error', 'Você é um robô?');
         } else {
@@ -66,27 +91,8 @@ class FormController extends Controller
             } else {
                 $cadastroOk = $this->getCvBusiness()->checkCadastroOk($vParams['cpf']);
                 $vParams['cadastroOk'] = $cadastroOk;
-                $vParams['iniciado'] = true;
             }
         }
-        return $this->render('landpage.html.twig', $vParams);
-    }
-
-    /**
-     * Ao fazer login.
-     *
-     * @param Request $request
-     */
-    private function handleLogin(Request $request) {
-
-    }
-
-    /**
-     * Ao clicar em 'Esqueci minha senha'.
-     * @param Request $request
-     */
-    private function handleEsqueciSenha(Request $request) {
-
     }
 
     /**
@@ -94,29 +100,55 @@ class FormController extends Controller
      *
      * @param Request $request
      * @param $vParams
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return void
      */
-    private function handleNovo(Request $request, $vParams) {
-        $vParams['iniciado'] = true;
-        $cpf = preg_replace('/[^\d]/','', $request->get('cpf'));
-        $email = $request->get('email');
-        $senha = $request->get('password');
-
-        $vParams['cpf'] = $cpf;
-        $vParams['email'] = $email;
-        if ($request->get('password') !== $request->get('password2')) {
+    private function handleNovo(Request $request, &$vParams)
+    {
+        if ($vParams['password'] !== $vParams['password2']) {
             $this->addFlash('error', 'As senhas não coincidem.');
-            return $this->render('landpage.html.twig', $vParams);
         } else {
             try {
-                $this->getCvBusiness()->novo($cpf, $email, $senha);
-                $vParams['emailConfirmEnviado'] = true;
+                $this->getCvBusiness()->novo($vParams['cpf'], $vParams['email'], $vParams['password']);
+                $vParams['cadastroIniciado'] = true;
             } catch (\Exception $e) {
                 $this->addFlash('error', $e->getMessage());
             }
-            return $this->render('landpage.html.twig', $vParams);
         }
     }
+
+    /**
+     * Ao fazer login.
+     *
+     * @param Request $request
+     * @param $params
+     */
+    private function handleLogin(Request $request, &$params)
+    {
+
+
+    }
+
+    /**
+     *
+     * @Route("/esqueciMinhaSenha", name="esqueciMinhaSenha")
+     * @param Request $request
+     * @param $cpf
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function handleEsqueciSenha(Request $request)
+    {
+        try {
+            $vParams['cpf'] = preg_replace('/[^\d]/', '', $request->get('cpf'));
+            $this->getCvBusiness()->reenviarSenha($vParams['cpf']);
+            $this->addFlash('info', 'Nova senha enviada para seu e-mail.');
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Erro ao gerar nova senha.');
+        }
+        $vParams['step'] = 'login';
+
+        return $this->render('landpage.html.twig', $vParams);
+    }
+
 
     /**
      *
@@ -126,8 +158,41 @@ class FormController extends Controller
      */
     public function confirmEmail(Request $request)
     {
+        $cvId = $request->get('cv');
+        $uuid = $request->get('uuid');
+
+        try {
+            $cv = $this->getCvBusiness()->confirmEmail($cvId, $uuid);
+            if (!$cv) {
+                $this->addFlash('error', 'Não foi possível confirmar seu e-mail.');
+            } else {
+                $request->request->set('iniciarLogin', 'true');
+                return $this->redirectToRoute('inicio', $request->request->all());
+            }
+        } catch (\Exception $e) {
+            $this->getLogger()->error('Não foi possível confirmar o e-mail');
+            $this->getLogger()->error($e->getMessage());
+            $this->addFlash('error', 'Não foi possível confirmar seu e-mail.');
+        }
+
+        return $this->redirectToRoute('inicio');
 
     }
+
+
+    /**
+     *
+     * @Route("/form/{cv}", name="form", requirements={"cv"="\d+"})
+     * @ParamConverter("cv", class="App\Entity\CV", options={"mapping": {"cv": "id"}})
+     * @param Request $request
+     * @param CV|null $cv
+     * @return void
+     */
+    public function form(Request $request, CV $cv)
+    {
+
+    }
+
 
     /**
      * @return mixed
@@ -144,6 +209,23 @@ class FormController extends Controller
     public function setCvBusiness(CVBusiness $cvBusiness): void
     {
         $this->cvBusiness = $cvBusiness;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLogger(): LoggerInterface
+    {
+        return $this->logger;
+    }
+
+    /**
+     * @required
+     * @param mixed $logger
+     */
+    public function setLogger(LoggerInterface $logger): void
+    {
+        $this->logger = $logger;
     }
 
 
