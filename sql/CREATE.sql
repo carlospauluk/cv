@@ -136,3 +136,27 @@ CREATE TABLE cv_exper_profis (
   UNIQUE KEY K_cv_filho_01 (cv_id, nome_empresa, admissao)
   
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_swedish_ci;
+
+
+
+DROP TABLE IF EXISTS cargos;
+CREATE TABLE cargos (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  version INTEGER DEFAULT NULL,
+  inserted DATETIME NOT NULL,
+  updated DATETIME NOT NULL,
+
+  cargo VARCHAR(100),
+
+  PRIMARY KEY (id),
+  UNIQUE KEY K_cargos (cargo)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_swedish_ci;
+
+
+DROP TABLE IF EXISTS cv_cargos;
+CREATE TABLE cv_cargos (
+  cv_id BIGINT NOT NULL,
+  cargo_id BIGINT NOT NULL,
+  PRIMARY KEY (cv_id, cargo_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_swedish_ci;

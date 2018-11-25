@@ -32,6 +32,7 @@ Encore
      */
     .createSharedEntry('bse_layout', './assets/js/bse/layout.js')
     .addEntry('landpage', './assets/js/landpage.js')
+    .addEntry('cv', './assets/js/cv.js')
 
     /*
      * FEATURE CONFIG

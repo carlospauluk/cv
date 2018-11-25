@@ -4,12 +4,13 @@ namespace App\Controller;
 
 use App\Business\CVBusiness;
 use App\Entity\CV;
+use App\Form\CVType;
 use Psr\Log\LoggerInterface;
 use ReCaptcha\ReCaptcha;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Annotation\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 
 class FormController extends Controller
 {
@@ -37,32 +38,41 @@ class FormController extends Controller
         $vParams['password'] = $request->get('password');
         $vParams['password2'] = $request->get('password2');
         $vParams['email'] = $request->get('email');
+        $vParams['password_login'] = $request->get('password_login');
 
-        if ($request->get('btnIniciar')) {
-            // estava no 'land' e clicou em 'Iniciar'
-            $this->handleInicio($request, $vParams);
-            if (!isset($vParams['cadastroOk'])) {
-                $step = 'land';
-            } else if ($vParams['cadastroOk']) {
+        $submittedToken = $request->request->get('_csrf_token');
+        if ($submittedToken and !$this->isCsrfTokenValid('land', $submittedToken)) {
+            $this->addFlash('error', 'Erro de submissão');
+
+        } else {
+
+            if ($request->get('btnIniciar')) {
+                // estava no 'land' e clicou em 'Iniciar'
+                $this->handleInicio($request, $vParams);
+                if (!isset($vParams['cadastroOk'])) {
+                    $step = 'land';
+                } else if ($vParams['cadastroOk']) {
+                    $step = 'login';
+                } else {
+                    $step = 'iniciado';
+                }
+            } else if ($request->get('btnNovo')) {
+                // estava no 'iniciar' e clicou em 'Novo'
+                $this->handleNovo($request, $vParams);
+                if ($vParams['cadastroIniciado']) {
+                    $step = 'emailConfirmEnviado';
+                } else {
+                    $step = 'iniciado';
+                }
+            } else if ($request->get('btnLogin')) {
+                // estava no login e clicou em 'Entrar'
+                $this->handleLogin($request, $vParams);
+                return $this->redirectToRoute('cv');
+            } else if ($request->get('btnEsqueciMinhaSenha')) {
+                $this->handleEsqueciSenha($vParams);
                 $step = 'login';
-            } else {
-                $step = 'iniciado';
-            }
-        } else if ($request->get('btnNovo')) {
-            // estava no 'iniciar' e clicou em 'Novo'
-            $this->handleNovo($request, $vParams);
-            if ($vParams['cadastroIniciado']) {
-                $step = 'emailConfirmEnviado';
-            } else {
-                $step = 'iniciado';
-            }
-        } else if ($request->get('btnLogin')) {
-            // estava no login e clicou em 'Entrar'
-            if ($this->handleLogin($request, $vParams)) {
-                $this->redirectToRoute('form', ['cv' => null]);
             }
         }
-
         $vParams['step'] = $step;
         return $this->render('landpage.html.twig', $vParams);
     }
@@ -120,33 +130,38 @@ class FormController extends Controller
      * Ao fazer login.
      *
      * @param Request $request
-     * @param $params
+     * @param $vParams
+     * @return bool
      */
-    private function handleLogin(Request $request, &$params)
+    private function handleLogin(Request $request, &$vParams)
     {
-
-
+        try {
+            $r = $this->getCvBusiness()->login($vParams['cpf'], $vParams['password_login']);
+            if (!$r) {
+                $this->addFlash('error', 'CPF ou senha inválidos');
+                return false;
+            }
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Erro ao tentar efetuar login');
+        }
+        return true;
     }
 
     /**
      *
      * @Route("/esqueciMinhaSenha", name="esqueciMinhaSenha")
-     * @param Request $request
-     * @param $cpf
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @param $vParams
+     * @return void
      */
-    public function handleEsqueciSenha(Request $request)
+    public function handleEsqueciSenha(&$vParams)
     {
         try {
-            $vParams['cpf'] = preg_replace('/[^\d]/', '', $request->get('cpf'));
             $this->getCvBusiness()->reenviarSenha($vParams['cpf']);
             $this->addFlash('info', 'Nova senha enviada para seu e-mail.');
         } catch (\Exception $e) {
             $this->addFlash('error', 'Erro ao gerar nova senha.');
         }
         $vParams['step'] = 'login';
-
-        return $this->render('landpage.html.twig', $vParams);
     }
 
 
@@ -182,14 +197,45 @@ class FormController extends Controller
 
     /**
      *
-     * @Route("/form/{cv}", name="form", requirements={"cv"="\d+"})
-     * @ParamConverter("cv", class="App\Entity\CV", options={"mapping": {"cv": "id"}})
+     * @Route("/cv", name="cv")
      * @param Request $request
-     * @param CV|null $cv
-     * @return void
+     * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function form(Request $request, CV $cv)
+    public function cv(Request $request)
     {
+        $vParams = [];
+        $session = $request->hasSession() ? $request->getSession() : new Session();
+        $cvId = $session->get('cvId');
+        if (!$cvId) {
+            return $this->redirectToRoute('inicio');
+        }
+        $cv = $this->getDoctrine()->getRepository(CV::class)->find($cvId);
+
+        $form = $this->createForm(CVType::class, $cv);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                try {
+                    $this->getCvBusiness()->saveCv($cv);
+                    $this->addFlash('success', 'Registro salvo com sucesso!');
+                } catch (\Exception $e) {
+                    $this->addFlash('error', 'Erro ao salvar!');
+                }
+            } else {
+                $errors = $form->getErrors(true, true);
+                foreach ($errors as $error) {
+                    $this->addFlash('error', $error->getMessage());
+                }
+            }
+        }
+
+        // Pode ou não ter vindo algo no $parameters. Independentemente disto, só adiciono form e foi-se.
+        $vParams['form'] = $form->createView();
+
+
+        return $this->render('cv.html.twig', $vParams);
 
     }
 

@@ -1,0 +1,248 @@
+{% extends 'index.html.twig' %}
+
+{% block up_scripts %}
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+{% endblock %}
+
+{% block page_content %}
+
+    <section class="login-block">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 login-sec">
+                    <p class="text-center"><img src="http://www.casabonsucesso.com.br/img/LOGO_COMPLETO_200px.jpg"/>
+                    </p>
+                    <h2 class="text-center">Cadastro de Currículo</h2>
+
+
+                    {% form_theme form 'bootstrap_4_horizontal_layout.html.twig' %}
+
+                    {{ form_start(form) }}
+
+                    {{ form_row(form.id) }}
+                    {{ form_row(form.updated) }}
+
+                    {{ form_row(form.cargosPretendidos) }}
+
+                    {{ form_row(form._token) }}
+
+                    {{ form_row(form.cpf) }}
+                    {{ form_row(form.nome) }}
+                    {{ form_row(form.email) }}
+
+                    {{ form_row(form.dtNascimento) }}
+                    {{ form_row(form.naturalidade) }}
+
+                    <div class="card" id="divCamposTelefones">
+                        <h5 class="card-header">Telefones</h5>
+                        <div class="card-body">
+
+                            <div class="form-group row">
+                                {{ form_label(form.telefone1) }}
+                                <div class="col-sm-5">
+                                    {{ form_errors(form.telefone1) }}
+                                    {{ form_widget(form.telefone1) }}
+                                    {{ form_help(form.telefone1) }}
+                                </div>
+                                <div class="col-sm-5">
+                                    {{ form_errors(form.telefone1Tipo) }}
+                                    {{ form_widget(form.telefone1Tipo) }}
+                                    {{ form_help(form.telefone1Tipo) }}
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                {{ form_label(form.telefone2) }}
+                                <div class="col-sm-5">
+                                    {{ form_errors(form.telefone2) }}
+                                    {{ form_widget(form.telefone2) }}
+                                    {{ form_help(form.telefone2) }}
+                                </div>
+                                <div class="col-sm-5">
+                                    {{ form_errors(form.telefone2Tipo) }}
+                                    {{ form_widget(form.telefone2Tipo) }}
+                                    {{ form_help(form.telefone2Tipo) }}
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                {{ form_label(form.telefone3) }}
+                                <div class="col-sm-5">
+                                    {{ form_errors(form.telefone3) }}
+                                    {{ form_widget(form.telefone3) }}
+                                    {{ form_help(form.telefone3) }}
+                                </div>
+                                <div class="col-sm-5">
+                                    {{ form_errors(form.telefone3Tipo) }}
+                                    {{ form_widget(form.telefone3Tipo) }}
+                                    {{ form_help(form.telefone3Tipo) }}
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                {{ form_label(form.telefone4) }}
+                                <div class="col-sm-5">
+                                    {{ form_errors(form.telefone4) }}
+                                    {{ form_widget(form.telefone4) }}
+                                    {{ form_help(form.telefone4) }}
+                                </div>
+                                <div class="col-sm-5">
+                                    {{ form_errors(form.telefone4Tipo) }}
+                                    {{ form_widget(form.telefone4Tipo) }}
+                                    {{ form_help(form.telefone4Tipo) }}
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                {{ form_label(form.telefone5) }}
+                                <div class="col-sm-5">
+                                    {{ form_errors(form.telefone5) }}
+                                    {{ form_widget(form.telefone5) }}
+                                    {{ form_help(form.telefone5) }}
+                                </div>
+                                <div class="col-sm-5">
+                                    {{ form_errors(form.telefone5Tipo) }}
+                                    {{ form_widget(form.telefone5Tipo) }}
+                                    {{ form_help(form.telefone5Tipo) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" id="divCamposEnderecoAtual">
+                        <h5 class="card-header">Endereço Atual</h5>
+                        <div class="card-body">
+                            {{ form_row(form.enderecoAtualLogr) }}
+                            {{ form_row(form.enderecoAtualNumero) }}
+                            {{ form_row(form.enderecoAtualCompl) }}
+                            {{ form_row(form.enderecoAtualBairro) }}
+                            {{ form_row(form.enderecoAtualCidade) }}
+                            {{ form_row(form.enderecoAtualUf) }}
+                            {{ form_row(form.enderecoAtualTempoResid) }}
+                        </div>
+                    </div>
+
+
+                    <div class="card" id="divCamposEstadoCivil">
+                        <h5 class="card-header">Estado Civil</h5>
+                        <div class="card-body">
+                            {{ form_row(form.estadoCivil) }}
+                            {{ form_row(form.conjugeNome) }}
+                            {{ form_row(form.conjugeProfissao) }}
+                        </div>
+                    </div>
+
+
+                    <div class="card" id="divCamposFilhos">
+                        <h5 class="card-header">Filhos</h5>
+                        <div class="card-body">
+                            {{ form_row(form.temFilhos) }}
+
+                            <div class="form-group row" style="display: none;" id="divQtdeFilhos">
+                                <label class="col-form-label col-sm-2"
+                                       for="qtdeFilhos">Qtde Filhos</label>
+                                <div class="col-sm-10">
+                                    <input type="number" min="1" step="1" pattern="\d*" id="qtdeFilhos"
+                                           class="form-control">
+                                </div>
+                            </div>
+
+                            <div id="dadosFilhos" style="display: none;">
+
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="card" id="divCamposFiliacao">
+                        <h5 class="card-header">Filiação</h5>
+                        <div class="card-body">
+                            {{ form_row(form.maeNome) }}
+                            {{ form_row(form.maeProfissao) }}
+                            {{ form_row(form.paiNome) }}
+                            {{ form_row(form.paiProfissao) }}
+                        </div>
+                    </div>
+
+                    <div class="card" id="divCamposReferencias1">
+                        <h5 class="card-header">Referência (1)</h5>
+                        <div class="card-body">
+                            {{ form_row(form.referencia1Nome) }}
+                            {{ form_row(form.referencia1Relacao) }}
+                            {{ form_row(form.referencia1Telefone1) }}
+                            {{ form_row(form.referencia1Telefone2) }}
+                        </div>
+                    </div>
+
+                    <div class="card" id="divCamposReferencias2">
+                        <h5 class="card-header">Referência (2)</h5>
+                        <div class="card-body">
+                            {{ form_row(form.referencia2Nome) }}
+                            {{ form_row(form.referencia2Relacao) }}
+                            {{ form_row(form.referencia2Telefone1) }}
+                            {{ form_row(form.referencia2Telefone2) }}
+                        </div>
+                    </div>
+
+                    <div class="card" id="divCamposEstudo">
+                        <h5 class="card-header">Estudos</h5>
+                        <div class="card-body">
+                            {{ form_row(form.ensinoFundamentalStatus) }}
+                            {{ form_row(form.ensinoFundamentalLocal) }}
+                            <hr/>
+                            {{ form_row(form.ensinoMedioStatus) }}
+                            {{ form_row(form.ensinoMedioLocal) }}
+                            <hr/>
+                            {{ form_row(form.ensinoSuperiorStatus) }}
+                            {{ form_row(form.ensinoSuperiorLocal) }}
+                            <hr/>
+                            {{ form_row(form.ensinoDemaisObs) }}
+
+                        </div>
+                    </div>
+
+
+                    {{ form_row(form.conheceAEmpresaTempo) }}
+                    {{ form_row(form.ehNossoCliente) }}
+
+                    <div class="card" id="divCamposFamiliaresCrediario">
+                        <h5 class="card-header">Familiares com cadastro em nosso crediário</h5>
+                        <div class="card-body">
+                            {{ form_row(form.parente1FichaCrediarioNome) }}
+                            {{ form_row(form.parente2FichaCrediarioNome) }}
+                        </div>
+                    </div>
+
+                    <div class="card" id="divCamposFamiliaresCrediario">
+                        <h5 class="card-header">Conhecidos que já trabalharam ou ainda trabalham em nossa empresa</h5>
+                        <div class="card-body">
+                            {{ form_row(form.conhecido1TrabalhouNaEmpresa) }}
+                            {{ form_row(form.conhecido2TrabalhouNaEmpresa) }}
+                        </div>
+                    </div>
+
+                    {{ form_row(form.motivosQuerTrabalharAqui) }}
+
+
+                    <div class="row">
+                        <div class="col text-right">
+                            <button type="submit" class="btn btn-primary btn-lg" value="Salvar">
+                                <i class="fas fa-save" aria-hidden="true"></i> Salvar
+                            </button>
+                        </div>
+                    </div>
+
+
+                    {{ form_end(form, {'render_rest': false}) }}
+
+
+                </div>
+
+            </div>
+    </section>
+
+{% endblock %}
+
+{% block down_scripts %}
+    <script src="{{ asset('build/cv.js') }}"></script>
+{% endblock %}

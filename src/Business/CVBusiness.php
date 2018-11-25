@@ -3,12 +3,12 @@
 namespace App\Business;
 
 use App\Entity\CV;
+use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Swift_Mailer;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Security\Core\Encoder\BCryptPasswordEncoder;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Security\Core\Encoder\Pbkdf2PasswordEncoder;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class CVBusiness extends BaseBusiness
 {
@@ -60,7 +60,7 @@ class CVBusiness extends BaseBusiness
             $cv->setEmailConfirmUUID(md5(uniqid(rand(), true)));
             try {
                 $this->getDoctrine()->getEntityManager()->persist($cv);
-                $this->getDoctrine()->getEntityManager()->flush();;
+                $this->getDoctrine()->getEntityManager()->flush();
             } catch (ORMException $e) {
                 throw new \Exception('Erro ao salvar novo registro', 0, $e);
             }
@@ -82,8 +82,7 @@ class CVBusiness extends BaseBusiness
             ->setFrom('mailer@casabonsucesso.com.br', 'Casa Bonsucesso')
             ->setSubject('Confirmação de Cadastro - Cadastro de Currículos')
             ->setTo($cv->getEmail())
-            ->setBody($body,'text/html')
-        ;
+            ->setBody($body, 'text/html');
         return $this->getSwiftMailer()->send($message);
     }
 
@@ -105,16 +104,56 @@ class CVBusiness extends BaseBusiness
             $n = rand(0, $alphaLength);
             $pass[] = $alphabet[$n];
         }
-        $novaSenha = implode($pass); //turn the array into a string
+        $novaSenhaTemp = implode($pass); //turn the array into a string
 
-        $body = $this->container->get('twig')->render('emailNovaSenha.html.twig', ['novaSenha' => $novaSenha]);
+        $passwordEncoder = new Pbkdf2PasswordEncoder();
+        $hashed = $passwordEncoder->encodePassword($novaSenhaTemp, $cpf);
+        $cv->setSenhaTemp($hashed);
+        $cv->setUpdated(new \DateTime());
+        $this->getDoctrine()->getEntityManager()->flush();
+
+
+        $body = $this->container->get('twig')->render('emailNovaSenha.html.twig', ['novaSenha' => $novaSenhaTemp]);
         $message = (new \Swift_Message())
             ->setFrom('mailer@casabonsucesso.com.br', 'Casa Bonsucesso')
             ->setSubject('Cadastro de Currículos - Nova Senha')
             ->setTo($cv->getEmail())
-            ->setBody($body,'text/html')
-        ;
+            ->setBody($body, 'text/html');
         return $this->getSwiftMailer()->send($message);
+    }
+
+    /**
+     * @param $cpf
+     * @param $password
+     * @return bool
+     * @throws ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws \Exception
+     */
+    public function login($cpf, $password)
+    {
+        $cv = $this->getDoctrine()->getRepository(CV::class)->findOneBy(['cpf' => $cpf]);
+        if (!$cv) {
+            throw new \Exception('Cadastro não encontrado.');
+        }
+        $passwordEncoder = new Pbkdf2PasswordEncoder();
+        if ($passwordEncoder->isPasswordValid($cv->getSenha(), $password, $cpf)) {
+            // Primeiro testa com a senha normal.
+            $session = new Session();
+            $session->set('cvId', $cv->getId()); // o cvId no session define o status de logado
+            return true;
+        } else if ($passwordEncoder->isPasswordValid($cv->getSenhaTemp(), $password, $cpf)) {
+            // Se não logar, verifica se entra com a temporária (gerada pelo "Esqueci minha senha").
+            $session = new Session();
+            $session->set('cvId', $cv->getId());
+            $cv->setSenha($cv->getSenhaTemp());
+            $cv->setSenhaTemp(null);
+            $this->getDoctrine()->getEntityManager()->flush();
+            return true;
+        } else {
+            return false;
+
+        }
     }
 
     /**
@@ -126,7 +165,8 @@ class CVBusiness extends BaseBusiness
      * @throws ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
-    public function confirmEmail($cvId, $uuid) {
+    public function confirmEmail($cvId, $uuid)
+    {
         $cv = $this->getDoctrine()->getRepository(CV::class)->find($cvId);
         if (!$cv or $cv->getEmailConfirmUUID() != $uuid) {
             return false;
@@ -134,6 +174,25 @@ class CVBusiness extends BaseBusiness
             $cv->setEmailConfirmado('S');
             $this->getDoctrine()->getEntityManager()->flush();
             return $cv;
+        }
+    }
+
+    /**
+     * Salvar o CV na base.
+     *
+     * @param CV $cv
+     * @return bool
+     * @throws \Exception
+     */
+    public function saveCv(CV $cv) {
+        try {
+            $cv->setUpdated(new \DateTime());
+            $this->getDoctrine()->getEntityManager()->merge($cv);
+            $this->getDoctrine()->getEntityManager()->flush();
+            return true;
+        } catch (ORMException $e) {
+            // FIXME: melhorar a mensagem.
+            throw new \Exception('Erro ao salvar os dados. Por favor, entre em contato com o suporte.');
         }
     }
 

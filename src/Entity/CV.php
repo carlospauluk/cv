@@ -6,7 +6,9 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\Mapping\Version;
+use Doctrine\ORM\Mapping\JoinColumn;
+use Doctrine\ORM\Mapping\JoinTable;
+use Doctrine\ORM\Mapping\ManyToMany;
 
 /**
  * CV.
@@ -43,13 +45,6 @@ class CV
     /**
      * @var string
      *
-     * @ORM\Column(name="cargos_pretendidos", type="string", length=300, nullable=false)
-     */
-    private $cargosPretendidos;
-
-    /**
-     * @var string
-     *
      * @ORM\Column(name="nome", type="string", length=100, nullable=false)
      */
     private $nome;
@@ -71,9 +66,9 @@ class CV
     /**
      * @var int
      *
-     * @ORM\Column(name="naturalidade_id", type="bigint", nullable=false)
+     * @ORM\Column(name="naturalidade", type="string", length=100, nullable=true)
      */
-    private $naturalidadeId;
+    private $naturalidade;
 
     /**
      * @var string
@@ -218,13 +213,6 @@ class CV
     /**
      * @var string|null
      *
-     * @ORM\Column(name="conjuge_estado_trabalho", type="string", length=2, nullable=true, options={"fixed"=true})
-     */
-    private $conjugeEstadoTrabalho;
-
-    /**
-     * @var string|null
-     *
      * @ORM\Column(name="conjuge_profissao", type="string", length=100, nullable=true)
      */
     private $conjugeProfissao;
@@ -253,13 +241,6 @@ class CV
     /**
      * @var string|null
      *
-     * @ORM\Column(name="pai_estado_trabalho", type="string", length=2, nullable=true, options={"fixed"=true})
-     */
-    private $paiEstadoTrabalho;
-
-    /**
-     * @var string|null
-     *
      * @ORM\Column(name="mae_nome", type="string", length=100, nullable=true)
      */
     private $maeNome;
@@ -270,13 +251,6 @@ class CV
      * @ORM\Column(name="mae_profissao", type="string", length=100, nullable=true)
      */
     private $maeProfissao;
-
-    /**
-     * @var string|null
-     *
-     * @ORM\Column(name="mae_estado_trabalho", type="string", length=2, nullable=true, options={"fixed"=true})
-     */
-    private $maeEstadoTrabalho;
 
     /**
      * @var string|null
@@ -384,9 +358,9 @@ class CV
     private $ensinoDemaisObs;
 
     /**
-     * @var int|null
+     * @var string|null
      *
-     * @ORM\Column(name="conhece_a_empresa_tempo", type="integer", nullable=true)
+     * @ORM\Column(name="conhece_a_empresa_tempo", type="string", length=100, nullable=true)
      */
     private $conheceAEmpresaTempo;
 
@@ -440,6 +414,16 @@ class CV
     private $senha;
 
     /**
+     * Senha gerada quando é solicitado pelo "Esqueci minha senha".
+     * Se torna a $senha caso efetue o login com ela.
+     *
+     * @var string|null
+     *
+     * @ORM\Column(name="senha_temp", type="string", length=200, nullable=true)
+     */
+    private $senhaTemp;
+
+    /**
      *
      * @var CVExperProfis[]|ArrayCollection
      *
@@ -477,11 +461,32 @@ class CV
      */
     private $emailConfirmUUID;
 
+    /**
+     *
+     * @ManyToMany(targetEntity="App\Entity\Cargo")
+     * @JoinTable(name="cv_cargos",
+     *      joinColumns={@JoinColumn(name="cv_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@JoinColumn(name="cargo_id", referencedColumnName="id")}
+     *      )
+     */
+    private $cargosPretendidos;
 
+
+    /**
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     * CV constructor.
+     */
     public function __construct()
     {
         $this->experProfis = new ArrayCollection();
         $this->filhos = new ArrayCollection();
+        $this->cargosPretendidos = new ArrayCollection();
     }
 
     /**
@@ -535,23 +540,7 @@ class CV
     /**
      * @return string
      */
-    public function getCargosPretendidos(): string
-    {
-        return $this->cargosPretendidos;
-    }
-
-    /**
-     * @param string $cargosPretendidos
-     */
-    public function setCargosPretendidos(string $cargosPretendidos): void
-    {
-        $this->cargosPretendidos = $cargosPretendidos;
-    }
-
-    /**
-     * @return string
-     */
-    public function getNome(): string
+    public function getNome(): ?string
     {
         return $this->nome;
     }
@@ -559,7 +548,7 @@ class CV
     /**
      * @param string $nome
      */
-    public function setNome(string $nome): void
+    public function setNome(?string $nome): void
     {
         $this->nome = $nome;
     }
@@ -583,7 +572,7 @@ class CV
     /**
      * @return DateTime
      */
-    public function getDtNascimento(): DateTime
+    public function getDtNascimento(): ?DateTime
     {
         return $this->dtNascimento;
     }
@@ -591,31 +580,32 @@ class CV
     /**
      * @param DateTime $dtNascimento
      */
-    public function setDtNascimento(DateTime $dtNascimento): void
+    public function setDtNascimento(?DateTime $dtNascimento): void
     {
         $this->dtNascimento = $dtNascimento;
     }
 
     /**
-     * @return int
+     * @return null|string
      */
-    public function getNaturalidadeId(): int
+    public function getNaturalidade(): ?string
     {
-        return $this->naturalidadeId;
+        return $this->naturalidade;
     }
 
     /**
-     * @param int $naturalidadeId
+     * @param $naturalidade
      */
-    public function setNaturalidadeId(int $naturalidadeId): void
+    public function setNaturalidade(?string $naturalidade): void
     {
-        $this->naturalidadeId = $naturalidadeId;
+        $this->naturalidade = $naturalidade;
     }
 
+
     /**
-     * @return string
+     * @return null|string
      */
-    public function getEnderecoAtualLogr(): string
+    public function getEnderecoAtualLogr(): ?string
     {
         return $this->enderecoAtualLogr;
     }
@@ -623,7 +613,7 @@ class CV
     /**
      * @param string $enderecoAtualLogr
      */
-    public function setEnderecoAtualLogr(string $enderecoAtualLogr): void
+    public function setEnderecoAtualLogr(?string $enderecoAtualLogr): void
     {
         $this->enderecoAtualLogr = $enderecoAtualLogr;
     }
@@ -631,7 +621,7 @@ class CV
     /**
      * @return string
      */
-    public function getEnderecoAtualNumero(): string
+    public function getEnderecoAtualNumero(): ?string
     {
         return $this->enderecoAtualNumero;
     }
@@ -639,7 +629,7 @@ class CV
     /**
      * @param string $enderecoAtualNumero
      */
-    public function setEnderecoAtualNumero(string $enderecoAtualNumero): void
+    public function setEnderecoAtualNumero(?string $enderecoAtualNumero): void
     {
         $this->enderecoAtualNumero = $enderecoAtualNumero;
     }
@@ -663,7 +653,7 @@ class CV
     /**
      * @return string
      */
-    public function getEnderecoAtualBairro(): string
+    public function getEnderecoAtualBairro(): ?string
     {
         return $this->enderecoAtualBairro;
     }
@@ -671,7 +661,7 @@ class CV
     /**
      * @param string $enderecoAtualBairro
      */
-    public function setEnderecoAtualBairro(string $enderecoAtualBairro): void
+    public function setEnderecoAtualBairro(?string $enderecoAtualBairro): void
     {
         $this->enderecoAtualBairro = $enderecoAtualBairro;
     }
@@ -679,7 +669,7 @@ class CV
     /**
      * @return string
      */
-    public function getEnderecoAtualCidade(): string
+    public function getEnderecoAtualCidade(): ?string
     {
         return $this->enderecoAtualCidade;
     }
@@ -687,7 +677,7 @@ class CV
     /**
      * @param string $enderecoAtualCidade
      */
-    public function setEnderecoAtualCidade(string $enderecoAtualCidade): void
+    public function setEnderecoAtualCidade(?string $enderecoAtualCidade): void
     {
         $this->enderecoAtualCidade = $enderecoAtualCidade;
     }
@@ -695,7 +685,7 @@ class CV
     /**
      * @return string
      */
-    public function getEnderecoAtualUf(): string
+    public function getEnderecoAtualUf(): ?string
     {
         return $this->enderecoAtualUf;
     }
@@ -703,7 +693,7 @@ class CV
     /**
      * @param string $enderecoAtualUf
      */
-    public function setEnderecoAtualUf(string $enderecoAtualUf): void
+    public function setEnderecoAtualUf(?string $enderecoAtualUf): void
     {
         $this->enderecoAtualUf = $enderecoAtualUf;
     }
@@ -711,7 +701,7 @@ class CV
     /**
      * @return string
      */
-    public function getEnderecoAtualTempoResid(): string
+    public function getEnderecoAtualTempoResid(): ?string
     {
         return $this->enderecoAtualTempoResid;
     }
@@ -719,7 +709,7 @@ class CV
     /**
      * @param string $enderecoAtualTempoResid
      */
-    public function setEnderecoAtualTempoResid(string $enderecoAtualTempoResid): void
+    public function setEnderecoAtualTempoResid(?string $enderecoAtualTempoResid): void
     {
         $this->enderecoAtualTempoResid = $enderecoAtualTempoResid;
     }
@@ -727,7 +717,7 @@ class CV
     /**
      * @return string
      */
-    public function getTelefone1(): string
+    public function getTelefone1(): ?string
     {
         return $this->telefone1;
     }
@@ -735,7 +725,7 @@ class CV
     /**
      * @param string $telefone1
      */
-    public function setTelefone1(string $telefone1): void
+    public function setTelefone1(?string $telefone1): void
     {
         $this->telefone1 = $telefone1;
     }
@@ -743,7 +733,7 @@ class CV
     /**
      * @return string
      */
-    public function getTelefone1Tipo(): string
+    public function getTelefone1Tipo(): ?string
     {
         return $this->telefone1Tipo;
     }
@@ -751,7 +741,7 @@ class CV
     /**
      * @param string $telefone1Tipo
      */
-    public function setTelefone1Tipo(string $telefone1Tipo): void
+    public function setTelefone1Tipo(?string $telefone1Tipo): void
     {
         $this->telefone1Tipo = $telefone1Tipo;
     }
@@ -903,7 +893,7 @@ class CV
     /**
      * @return string
      */
-    public function getEstadoCivil(): string
+    public function getEstadoCivil(): ?string
     {
         return $this->estadoCivil;
     }
@@ -911,7 +901,7 @@ class CV
     /**
      * @param string $estadoCivil
      */
-    public function setEstadoCivil(string $estadoCivil): void
+    public function setEstadoCivil(?string $estadoCivil): void
     {
         $this->estadoCivil = $estadoCivil;
     }
@@ -935,22 +925,6 @@ class CV
     /**
      * @return null|string
      */
-    public function getConjugeEstadoTrabalho(): ?string
-    {
-        return $this->conjugeEstadoTrabalho;
-    }
-
-    /**
-     * @param null|string $conjugeEstadoTrabalho
-     */
-    public function setConjugeEstadoTrabalho(?string $conjugeEstadoTrabalho): void
-    {
-        $this->conjugeEstadoTrabalho = $conjugeEstadoTrabalho;
-    }
-
-    /**
-     * @return null|string
-     */
     public function getConjugeProfissao(): ?string
     {
         return $this->conjugeProfissao;
@@ -967,7 +941,7 @@ class CV
     /**
      * @return string
      */
-    public function getTemFilhos(): string
+    public function getTemFilhos(): ?string
     {
         return $this->temFilhos;
     }
@@ -975,7 +949,7 @@ class CV
     /**
      * @param string $temFilhos
      */
-    public function setTemFilhos(string $temFilhos): void
+    public function setTemFilhos(?string $temFilhos): void
     {
         $this->temFilhos = $temFilhos;
     }
@@ -1024,22 +998,6 @@ class CV
     /**
      * @return null|string
      */
-    public function getPaiEstadoTrabalho(): ?string
-    {
-        return $this->paiEstadoTrabalho;
-    }
-
-    /**
-     * @param null|string $paiEstadoTrabalho
-     */
-    public function setPaiEstadoTrabalho(?string $paiEstadoTrabalho): void
-    {
-        $this->paiEstadoTrabalho = $paiEstadoTrabalho;
-    }
-
-    /**
-     * @return null|string
-     */
     public function getMaeNome(): ?string
     {
         return $this->maeNome;
@@ -1067,22 +1025,6 @@ class CV
     public function setMaeProfissao(?string $maeProfissao): void
     {
         $this->maeProfissao = $maeProfissao;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getMaeEstadoTrabalho(): ?string
-    {
-        return $this->maeEstadoTrabalho;
-    }
-
-    /**
-     * @param null|string $maeEstadoTrabalho
-     */
-    public function setMaeEstadoTrabalho(?string $maeEstadoTrabalho): void
-    {
-        $this->maeEstadoTrabalho = $maeEstadoTrabalho;
     }
 
     /**
@@ -1216,7 +1158,7 @@ class CV
     /**
      * @return string
      */
-    public function getEnsinoFundamentalStatus(): string
+    public function getEnsinoFundamentalStatus(): ?string
     {
         return $this->ensinoFundamentalStatus;
     }
@@ -1224,7 +1166,7 @@ class CV
     /**
      * @param string $ensinoFundamentalStatus
      */
-    public function setEnsinoFundamentalStatus(string $ensinoFundamentalStatus): void
+    public function setEnsinoFundamentalStatus(?string $ensinoFundamentalStatus): void
     {
         $this->ensinoFundamentalStatus = $ensinoFundamentalStatus;
     }
@@ -1248,7 +1190,7 @@ class CV
     /**
      * @return string
      */
-    public function getEnsinoMedioStatus(): string
+    public function getEnsinoMedioStatus(): ?string
     {
         return $this->ensinoMedioStatus;
     }
@@ -1256,7 +1198,7 @@ class CV
     /**
      * @param string $ensinoMedioStatus
      */
-    public function setEnsinoMedioStatus(string $ensinoMedioStatus): void
+    public function setEnsinoMedioStatus(?string $ensinoMedioStatus): void
     {
         $this->ensinoMedioStatus = $ensinoMedioStatus;
     }
@@ -1280,7 +1222,7 @@ class CV
     /**
      * @return string
      */
-    public function getEnsinoSuperiorStatus(): string
+    public function getEnsinoSuperiorStatus(): ?string
     {
         return $this->ensinoSuperiorStatus;
     }
@@ -1288,7 +1230,7 @@ class CV
     /**
      * @param string $ensinoSuperiorStatus
      */
-    public function setEnsinoSuperiorStatus(string $ensinoSuperiorStatus): void
+    public function setEnsinoSuperiorStatus(?string $ensinoSuperiorStatus): void
     {
         $this->ensinoSuperiorStatus = $ensinoSuperiorStatus;
     }
@@ -1328,7 +1270,7 @@ class CV
     /**
      * @return int|null
      */
-    public function getConheceAEmpresaTempo(): ?int
+    public function getConheceAEmpresaTempo(): ?string
     {
         return $this->conheceAEmpresaTempo;
     }
@@ -1336,7 +1278,7 @@ class CV
     /**
      * @param int|null $conheceAEmpresaTempo
      */
-    public function setConheceAEmpresaTempo(?int $conheceAEmpresaTempo): void
+    public function setConheceAEmpresaTempo(?string $conheceAEmpresaTempo): void
     {
         $this->conheceAEmpresaTempo = $conheceAEmpresaTempo;
     }
@@ -1344,7 +1286,7 @@ class CV
     /**
      * @return string
      */
-    public function getEhNossoCliente(): string
+    public function getEhNossoCliente(): ?string
     {
         return $this->ehNossoCliente;
     }
@@ -1352,7 +1294,7 @@ class CV
     /**
      * @param string $ehNossoCliente
      */
-    public function setEhNossoCliente(string $ehNossoCliente): void
+    public function setEhNossoCliente(?string $ehNossoCliente): void
     {
         $this->ehNossoCliente = $ehNossoCliente;
     }
@@ -1454,6 +1396,22 @@ class CV
     }
 
     /**
+     * @return null|string
+     */
+    public function getSenhaTemp(): ?string
+    {
+        return $this->senhaTemp;
+    }
+
+    /**
+     * @param null|string $senhaTemp
+     */
+    public function setSenhaTemp(?string $senhaTemp): void
+    {
+        $this->senhaTemp = $senhaTemp;
+    }
+
+    /**
      *
      * @return Collection|CVExperProfis[]
      */
@@ -1465,7 +1423,7 @@ class CV
     /**
      * @return string
      */
-    public function getEmailConfirmado(): string
+    public function getEmailConfirmado(): ?string
     {
         return $this->emailConfirmado;
     }
@@ -1473,7 +1431,7 @@ class CV
     /**
      * @param string $emailConfirmado
      */
-    public function setEmailConfirmado(string $emailConfirmado): void
+    public function setEmailConfirmado(?string $emailConfirmado): void
     {
         $this->emailConfirmado = $emailConfirmado;
     }
@@ -1481,7 +1439,7 @@ class CV
     /**
      * @return string
      */
-    public function getEmailConfirmUUID(): string
+    public function getEmailConfirmUUID(): ?string
     {
         return $this->emailConfirmUUID;
     }
@@ -1489,9 +1447,26 @@ class CV
     /**
      * @param string $emailConfirmUUID
      */
-    public function setEmailConfirmUUID(string $emailConfirmUUID): void
+    public function setEmailConfirmUUID(?string $emailConfirmUUID): void
     {
         $this->emailConfirmUUID = $emailConfirmUUID;
+    }
+
+    /**
+     *
+     * @return Collection|Cargo[]
+     */
+    public function getCargosPretendidos(): Collection
+    {
+        return $this->cargosPretendidos;
+    }
+
+    /**
+     * @param mixed $cargosPretendidos
+     */
+    public function setCargosPretendidos($cargosPretendidos): void
+    {
+        $this->cargosPretendidos = $cargosPretendidos;
     }
 
 
