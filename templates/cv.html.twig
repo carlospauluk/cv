@@ -22,6 +22,22 @@
                     <a id="a_top"></a>
 
                     {{ form_row(form.id) }}
+
+                    <div class="form-group row">
+                        {{ form_label(form.updated) }}
+                        <div class="col-sm-7">
+                            {{ form_errors(form.updated) }}
+                            {{ form_widget(form.updated) }}
+                            {{ form_help(form.updated) }}
+                        </div>
+                        <div class="col-sm-3 text-right">
+                            <button id="btnEsqueciSenha" type="button" onclick="window.location.href = '{{ url('logout') }}'"
+                                    class="btn btn-primary" value="Sair">
+                                <i class="fas fa-sign-out-alt"></i> Sair
+                            </button>
+                        </div>
+                    </div>
+
                     {{ form_row(form.updated) }}
 
                     {{ form_row(form.cargosPretendidos) }}

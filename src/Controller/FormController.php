@@ -60,7 +60,8 @@ class FormController extends Controller
                 // estava no 'iniciar' e clicou em 'Novo'
                 $this->handleNovo($request, $vParams);
                 if ($vParams['cadastroIniciado']) {
-                    $step = 'emailConfirmEnviado';
+                    $this->addFlash('info', 'E-mail enviado. Verifique sua Caixa de Entrada ou o Spam.');
+                    $step = 'login';
                 } else {
                     $step = 'iniciado';
                 }
@@ -149,6 +150,19 @@ class FormController extends Controller
 
     /**
      *
+     * @Route("/logout", name="logout")
+     * @param Request $request
+     * @return void
+     */
+    public function logout(Request $request)
+    {
+        $session = $request->hasSession() ? $request->getSession() : new Session();
+        $session->clear();
+        return $this->redirectToRoute('inicio');
+    }
+
+    /**
+     *
      * @Route("/esqueciMinhaSenha", name="esqueciMinhaSenha")
      * @param $vParams
      * @return void
@@ -182,6 +196,7 @@ class FormController extends Controller
                 $this->addFlash('error', 'Não foi possível confirmar seu e-mail.');
             } else {
                 $request->request->set('iniciarLogin', 'true');
+                $this->addFlash('info', 'E-mail confirmado com sucesso. Efetua o login...');
                 return $this->redirectToRoute('inicio', $request->request->all());
             }
         } catch (\Exception $e) {
@@ -220,7 +235,9 @@ class FormController extends Controller
                 try {
                     $this->getCvBusiness()->saveCv($cv);
                     $this->getCvBusiness()->saveFilhos($cv, $request->get('filho'));
-                    $cv = $this->getCvBusiness()->saveEmpregos($cv, $request->get('emprego'));
+                    $this->getCvBusiness()->saveEmpregos($cv, $request->get('emprego'));
+                    $this->getDoctrine()->getManager()->refresh($cv);
+                    $form = $this->createForm(CVType::class, $cv);
                     $this->addFlash('success', 'Registro salvo com sucesso!');
                 } catch (\Throwable $e) {
                     $this->addFlash('error', 'Erro ao salvar!');
@@ -238,7 +255,6 @@ class FormController extends Controller
 
         $vParams['dadosFilhosJSON'] = $this->getCvBusiness()->dadosFilhos2JSON($cv);
         $vParams['dadosEmpregosJSON'] = $this->getCvBusiness()->dadosEmpregos2JSON($cv);
-        $vParams['_fragment'] = "telefones";
 
         return $this->render('cv.html.twig', $vParams);
 
@@ -270,6 +286,7 @@ class FormController extends Controller
             } else {
                 $this->getCvBusiness()->alterarSenha($cvId, $senhaAtual, $password);
                 $session->clear();
+                $this->addFlash('info', 'Senha alterada com sucesso!');
                 return $this->redirectToRoute('inicio');
             }
         }

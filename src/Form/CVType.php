@@ -76,12 +76,9 @@ class CVType extends AbstractType
         $builder->get('cpf')
             ->addModelTransformer(new CallbackTransformer(
                 function ($obj) {
-                    // transform the array to a string
                     return $obj;
                 },
                 function ($str) {
-                    // transform the string back to an array
-                    // return explode(', ', $str);
                     return preg_replace('/[^\d]/', '', $str);
                 }
             ))
@@ -343,7 +340,7 @@ class CVType extends AbstractType
         $builder->add('ensinoSuperiorLocal', TextType::class, array(
             'label' => 'Faculdade/Curso',
             'required' => false,
-            'required' => 'Informar a faculdade e o curso'
+            'help' => 'Informar a faculdade e o curso'
         ));
 
         $builder->add('ensinoDemaisObs', TextareaType::class, array(
@@ -388,6 +385,9 @@ class CVType extends AbstractType
 
         $builder->add('motivosQuerTrabalharAqui', TextareaType::class, array(
             'label' => 'Por quais motivos deseja trabalhar em nossa empresa?',
+            'attr' => array(
+                'rows' => '5'
+            ),
             'required' => false
         ));
 

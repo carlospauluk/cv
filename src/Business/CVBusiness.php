@@ -232,22 +232,32 @@ class CVBusiness extends BaseBusiness
     public function saveFilhos(CV $cv, $arrFilhos)
     {
         try {
-            $cv->getFilhos()->clear();
-            $this->getDoctrine()->getEntityManager()->flush();
-            foreach ($arrFilhos as $filho) {
-                $cvFilho = new CVFilho();
-                $cvFilho->setCv($cv);
-                $cvFilho->setInserted(new \DateTime());
-                $cvFilho->setUpdated(new \DateTime());
-                $cvFilho->setNome($filho['nome']);
-                $cvFilho->setDtNascimento(\DateTime::createFromFormat('d/m/Y', $filho['dtNascimento']));
-                $cvFilho->setOcupacao($filho['ocupacao']);
-                $cvFilho->setObs($filho['obs']);
-                $this->getDoctrine()->getEntityManager()->persist($cvFilho);
+            if ($cv->getTemFilhos() === 'N') {
+                $cv->setQtdeFilhos(null);
+                $cv->getFilhos()->clear();
                 $this->getDoctrine()->getEntityManager()->flush();
+                return $cv;
             }
-            $this->getDoctrine()->getEntityManager()->refresh($cv);
-            return $cv;
+
+            if ($arrFilhos and count($arrFilhos) > 0) {
+                $cv->getFilhos()->clear();
+                $this->getDoctrine()->getEntityManager()->flush();
+                foreach ($arrFilhos as $filho) {
+                    if (!$filho['nome']) continue;
+                    $cvFilho = new CVFilho();
+                    $cvFilho->setCv($cv);
+                    $cvFilho->setInserted(new \DateTime());
+                    $cvFilho->setUpdated(new \DateTime());
+                    $cvFilho->setNome($filho['nome']);
+                    $cvFilho->setDtNascimento($filho['dtNascimento'] ? \DateTime::createFromFormat('d/m/Y', $filho['dtNascimento']) : null);
+                    $cvFilho->setOcupacao($filho['ocupacao']);
+                    $cvFilho->setObs($filho['obs']);
+                    $this->getDoctrine()->getEntityManager()->persist($cvFilho);
+                    $this->getDoctrine()->getEntityManager()->flush();
+                }
+                $this->getDoctrine()->getEntityManager()->refresh($cv);
+                return $cv;
+            }
         } catch (ORMException $e) {
             throw new \Exception('Erro ao salvar dados dos filhos.');
         }
@@ -282,30 +292,32 @@ class CVBusiness extends BaseBusiness
     public function saveEmpregos(CV $cv, $arrEmpregos)
     {
         try {
-            $cv->getExperProfis()->clear();
-            $this->getDoctrine()->getEntityManager()->flush();
-            foreach ($arrEmpregos as $emprego) {
-                if ($emprego['nomeEmpresa']) {
-                    $cvExperProfiss = new CVExperProfis();
-                    $cvExperProfiss->setCv($cv);
-                    $cvExperProfiss->setInserted(new \DateTime());
-                    $cvExperProfiss->setUpdated(new \DateTime());
-                    $cvExperProfiss->setNomeEmpresa($emprego['nomeEmpresa']);
-                    $cvExperProfiss->setLocalEmpresa($emprego['localEmpresa']);
-                    $cvExperProfiss->setNomeSuperior($emprego['nomeSuperior']);
-                    $cvExperProfiss->setCargo($emprego['cargo']);
-                    $cvExperProfiss->setHorario($emprego['horario']);
-                    $cvExperProfiss->setAdmissao($emprego['admissao'] ? \DateTime::createFromFormat('d/m/Y', $emprego['admissao']) : null);
-                    $cvExperProfiss->setDemissao($emprego['demissao'] ? \DateTime::createFromFormat('d/m/Y', $emprego['demissao']) : null);
-                    $cvExperProfiss->setUltimoSalario(isset($emprego['ultimoSalario']) ? (new \NumberFormatter(\Locale::getDefault(), \NumberFormatter::DECIMAL))->parse($emprego['ultimoSalario']) : null);
-                    $cvExperProfiss->setBeneficios($emprego['beneficios']);
-                    $cvExperProfiss->setMotivoDesligamento($emprego['motivoDesligamento']);
-                    $this->getDoctrine()->getEntityManager()->persist($cvExperProfiss);
-                    $this->getDoctrine()->getEntityManager()->flush();
+            if ($arrEmpregos and count($arrEmpregos) > 0) {
+                $cv->getExperProfis()->clear();
+                $this->getDoctrine()->getEntityManager()->flush();
+                foreach ($arrEmpregos as $emprego) {
+                    if ($emprego['nomeEmpresa']) {
+                        $cvExperProfiss = new CVExperProfis();
+                        $cvExperProfiss->setCv($cv);
+                        $cvExperProfiss->setInserted(new \DateTime());
+                        $cvExperProfiss->setUpdated(new \DateTime());
+                        $cvExperProfiss->setNomeEmpresa($emprego['nomeEmpresa']);
+                        $cvExperProfiss->setLocalEmpresa($emprego['localEmpresa']);
+                        $cvExperProfiss->setNomeSuperior($emprego['nomeSuperior']);
+                        $cvExperProfiss->setCargo($emprego['cargo']);
+                        $cvExperProfiss->setHorario($emprego['horario']);
+                        $cvExperProfiss->setAdmissao($emprego['admissao'] ? \DateTime::createFromFormat('d/m/Y', $emprego['admissao']) : null);
+                        $cvExperProfiss->setDemissao($emprego['demissao'] ? \DateTime::createFromFormat('d/m/Y', $emprego['demissao']) : null);
+                        $cvExperProfiss->setUltimoSalario(isset($emprego['ultimoSalario']) ? (new \NumberFormatter(\Locale::getDefault(), \NumberFormatter::DECIMAL))->parse($emprego['ultimoSalario']) : null);
+                        $cvExperProfiss->setBeneficios($emprego['beneficios']);
+                        $cvExperProfiss->setMotivoDesligamento($emprego['motivoDesligamento']);
+                        $this->getDoctrine()->getEntityManager()->persist($cvExperProfiss);
+                        $this->getDoctrine()->getEntityManager()->flush();
+                    }
                 }
+                $this->getDoctrine()->getEntityManager()->refresh($cv);
+                return $cv;
             }
-            $this->getDoctrine()->getEntityManager()->refresh($cv);
-            return $cv;
         } catch (ORMException $e) {
             throw new \Exception('Erro ao salvar dados dos filhos.');
         }

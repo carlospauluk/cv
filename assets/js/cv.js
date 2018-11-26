@@ -51,10 +51,10 @@ $(document).ready(function () {
         if (qtdeFilhos > 0) {
 
             for (let i = 1; i <= qtdeFilhos; i++) {
-                let nome = dadosFilhosJSON[i - 1].nome;
-                let dtNascimento = dadosFilhosJSON[i - 1].dtNascimento;
-                let ocupacao = dadosFilhosJSON[i - 1].ocupacao;
-                let obs = dadosFilhosJSON[i - 1].obs;
+                let nome = dadosFilhosJSON[i - 1] ? dadosFilhosJSON[i - 1].nome : '';
+                let dtNascimento = dadosFilhosJSON[i - 1] ? dadosFilhosJSON[i - 1].dtNascimento : '';
+                let ocupacao = dadosFilhosJSON[i - 1] ? dadosFilhosJSON[i - 1].ocupacao : '';
+                let obs = dadosFilhosJSON[i - 1] ? dadosFilhosJSON[i - 1].obs : '';
                 $dadosFilhos.append(
                     `
                         <div class="card">

@@ -14,7 +14,7 @@
                 </p>
                 <h2 class="text-center">Cadastro de Currículos</h2>
 
-                <form class="login-form" action="/" method="post">
+                <form class="login-form" action="/" method="post" id="loginForm">
 
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token('land') }}" />
 
@@ -43,7 +43,7 @@
                         </div>
                         <div class="form-group">
                             <label for="email">E-mail</label>
-                            <input type="email" class="form-control" name="email" id="email" required/>
+                            <input type="email" class="form-control email" name="email" id="email" required/>
                         </div>
                         <div class="form-group">
                             <label for="password">Senha</label>
@@ -68,10 +68,6 @@
                             </button>
                         </div>
 
-                    {% elseif step == 'emailConfirmEnviado' %}
-
-                        <p>E-mail enviado. Verifique sua caixa de entrada (e o spam).</p>
-
                     {% elseif step == 'login' %}
 
                         <div class="form-group">
@@ -83,7 +79,7 @@
                             <label for="password_login">Senha</label>
                             <input type="password" class="form-control" name="password_login" id="password_login" />
                             <small id="emailHelp" class="form-text text-muted text-right">
-                                <button type="submit" tabindex="2" id="btnEsqueciMinhaSenha" name="btnEsqueciMinhaSenha" value="Esqueci minha senha :-("
+                                <button type="button" id="btnEsqueciMinhaSenha" name="btnEsqueciMinhaSenha" value="Esqueci minha senha"
                                         class="btn btn-sm btn-outline-primary"><i class="far fa-frown"></i> Esqueci minha senha</button>
                             </small>
                         </div>
