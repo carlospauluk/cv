@@ -219,8 +219,10 @@ class FormController extends Controller
             if ($form->isValid()) {
                 try {
                     $this->getCvBusiness()->saveCv($cv);
+                    $this->getCvBusiness()->saveFilhos($cv, $request->get('filho'));
+                    $cv = $this->getCvBusiness()->saveEmpregos($cv, $request->get('emprego'));
                     $this->addFlash('success', 'Registro salvo com sucesso!');
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     $this->addFlash('error', 'Erro ao salvar!');
                 }
             } else {
@@ -234,8 +236,45 @@ class FormController extends Controller
         // Pode ou não ter vindo algo no $parameters. Independentemente disto, só adiciono form e foi-se.
         $vParams['form'] = $form->createView();
 
+        $vParams['dadosFilhosJSON'] = $this->getCvBusiness()->dadosFilhos2JSON($cv);
+        $vParams['dadosEmpregosJSON'] = $this->getCvBusiness()->dadosEmpregos2JSON($cv);
+        $vParams['_fragment'] = "telefones";
 
         return $this->render('cv.html.twig', $vParams);
+
+    }
+
+    /**
+     *
+     * @Route("/alterarSenha", name="alterarSenha")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    public function alterarSenha(Request $request)
+    {
+        $session = $request->hasSession() ? $request->getSession() : new Session();
+        $cvId = $session->get('cvId');
+        if (!$cvId) {
+            return $this->redirectToRoute('inicio');
+        }
+        $vParams = [];
+
+        if ($request->get('btnAlterarSenha')) {
+            $senhaAtual = $request->request->get('password_login');
+            $password = $request->request->get('password');
+            $password2 = $request->request->get('password2');
+            if ($password !== $password2) {
+                $this->addFlash('error', 'As senhas não coincidem.');
+            } else {
+                $this->getCvBusiness()->alterarSenha($cvId, $senhaAtual, $password);
+                $session->clear();
+                return $this->redirectToRoute('inicio');
+            }
+        }
+
+        return $this->render('alterarSenha.html.twig', $vParams);
 
     }
 

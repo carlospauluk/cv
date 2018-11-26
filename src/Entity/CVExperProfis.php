@@ -68,16 +68,16 @@ class CVExperProfis
     private $horario;
 
     /**
-     * @var string|null
+     * @var \DateTime|null
      *
-     * @ORM\Column(name="admissao", type="string", length=6, nullable=true, options={"fixed"=true})
+     * @ORM\Column(name="admissao", type="date", nullable=true)
      */
     private $admissao;
 
     /**
-     * @var string|null
+     * @var \DateTime|null
      *
-     * @ORM\Column(name="demissao", type="string", length=6, nullable=true, options={"fixed"=true})
+     * @ORM\Column(name="demissao", type="date", nullable=true)
      */
     private $demissao;
 
@@ -261,33 +261,33 @@ class CVExperProfis
     }
 
     /**
-     * @return null|string
+     * @return DateTime|null
      */
-    public function getAdmissao(): ?string
+    public function getAdmissao(): ?DateTime
     {
         return $this->admissao;
     }
 
     /**
-     * @param null|string $admissao
+     * @param DateTime|null $admissao
      */
-    public function setAdmissao(?string $admissao): void
+    public function setAdmissao(?DateTime $admissao): void
     {
         $this->admissao = $admissao;
     }
 
     /**
-     * @return null|string
+     * @return DateTime|null
      */
-    public function getDemissao(): ?string
+    public function getDemissao(): ?DateTime
     {
         return $this->demissao;
     }
 
     /**
-     * @param null|string $demissao
+     * @param DateTime|null $demissao
      */
-    public function setDemissao(?string $demissao): void
+    public function setDemissao(?DateTime $demissao): void
     {
         $this->demissao = $demissao;
     }

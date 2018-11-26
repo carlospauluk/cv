@@ -10,7 +10,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-12 login-sec">
-                    <p class="text-center"><img src="http://www.casabonsucesso.com.br/img/LOGO_COMPLETO_200px.jpg"/>
+                    <p class="text-center"><a href="{{ url('cv') }}"><img src="http://www.casabonsucesso.com.br/img/LOGO_COMPLETO_200px.jpg"/></a>
                     </p>
                     <h2 class="text-center">Cadastro de Currículo</h2>
 
@@ -18,6 +18,8 @@
                     {% form_theme form 'bootstrap_4_horizontal_layout.html.twig' %}
 
                     {{ form_start(form) }}
+
+                    <a id="a_top"></a>
 
                     {{ form_row(form.id) }}
                     {{ form_row(form.updated) }}
@@ -29,14 +31,39 @@
                     {{ form_row(form.cpf) }}
                     {{ form_row(form.nome) }}
                     {{ form_row(form.email) }}
+                    <div class="form-group row">
+                        <label class="col-form-label col-sm-2 required" for="password">Senha</label>
+                        <div class="col-sm-10">
+                            <button type="button" onclick="window.location.href = '{{ url('alterarSenha') }}'"
+                                    class="btn btn-primary" value="Alterar a senha">
+                                <i class="fas fa-unlock-alt"></i> Alterar a senha
+                            </button>
+                        </div>
+                    </div>
 
                     {{ form_row(form.dtNascimento) }}
                     {{ form_row(form.naturalidade) }}
 
+                    <hr/>
+                    {{ form_row(form.conheceAEmpresaTempo) }}
+                    {{ form_row(form.ehNossoCliente) }}
+
+                    <hr/>
+                    {{ form_row(form.motivosQuerTrabalharAqui) }}
+
+                    <hr />
+
+                    <div class="row" style="padding-bottom: 30px">
+                        <div class="col text-right">
+                            <button type="submit" class="btn btn-primary btn-lg" value="Salvar">
+                                <i class="fas fa-save" aria-hidden="true"></i> Salvar
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="card" id="divCamposTelefones">
                         <h5 class="card-header">Telefones</h5>
                         <div class="card-body">
-
                             <div class="form-group row">
                                 {{ form_label(form.telefone1) }}
                                 <div class="col-sm-5">
@@ -107,6 +134,16 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="card-footer">
+                            <div class="row">
+                                <div class="col text-right">
+                                    <button type="button" class="btn btn-primary btn-lg btnSalvarAnchored"
+                                            data-div="divCamposTelefones" value="Salvar">
+                                        <i class="fas fa-save" aria-hidden="true"></i> Salvar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="card" id="divCamposEnderecoAtual">
@@ -120,6 +157,16 @@
                             {{ form_row(form.enderecoAtualUf) }}
                             {{ form_row(form.enderecoAtualTempoResid) }}
                         </div>
+                        <div class="card-footer">
+                            <div class="row">
+                                <div class="col text-right">
+                                    <button type="button" class="btn btn-primary btn-lg btnSalvarAnchored"
+                                            data-div="divCamposEnderecoAtual" value="Salvar">
+                                        <i class="fas fa-save" aria-hidden="true"></i> Salvar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
 
@@ -130,6 +177,16 @@
                             {{ form_row(form.conjugeNome) }}
                             {{ form_row(form.conjugeProfissao) }}
                         </div>
+                        <div class="card-footer">
+                            <div class="row">
+                                <div class="col text-right">
+                                    <button type="button" class="btn btn-primary btn-lg btnSalvarAnchored"
+                                            data-div="divCamposEstadoCivil" value="Salvar">
+                                        <i class="fas fa-save" aria-hidden="true"></i> Salvar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
 
@@ -138,17 +195,25 @@
                         <div class="card-body">
                             {{ form_row(form.temFilhos) }}
 
-                            <div class="form-group row" style="display: none;" id="divQtdeFilhos">
-                                <label class="col-form-label col-sm-2"
-                                       for="qtdeFilhos">Qtde Filhos</label>
-                                <div class="col-sm-10">
-                                    <input type="number" min="1" step="1" pattern="\d*" id="qtdeFilhos"
-                                           class="form-control">
-                                </div>
+                            <div style="display: none;" id="divQtdeFilhos">
+                                {{ form_row(form.qtdeFilhos) }}
                             </div>
+
+                            <span id="dadosFilhosJSON" style="display: none;">{{ dadosFilhosJSON|raw }}</span>
 
                             <div id="dadosFilhos" style="display: none;">
 
+                            </div>
+                        </div>
+
+                        <div class="card-footer">
+                            <div class="row">
+                                <div class="col text-right">
+                                    <button type="button" class="btn btn-primary btn-lg btnSalvarAnchored"
+                                            data-div="divCamposFilhos" value="Salvar">
+                                        <i class="fas fa-save" aria-hidden="true"></i> Salvar
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -162,6 +227,16 @@
                             {{ form_row(form.paiNome) }}
                             {{ form_row(form.paiProfissao) }}
                         </div>
+                        <div class="card-footer">
+                            <div class="row">
+                                <div class="col text-right">
+                                    <button type="button" class="btn btn-primary btn-lg btnSalvarAnchored"
+                                            data-div="divCamposFiliacao" value="Salvar">
+                                        <i class="fas fa-save" aria-hidden="true"></i> Salvar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="card" id="divCamposReferencias1">
@@ -172,6 +247,16 @@
                             {{ form_row(form.referencia1Telefone1) }}
                             {{ form_row(form.referencia1Telefone2) }}
                         </div>
+                        <div class="card-footer">
+                            <div class="row">
+                                <div class="col text-right">
+                                    <button type="button" class="btn btn-primary btn-lg btnSalvarAnchored"
+                                            data-div="divCamposReferencias1" value="Salvar">
+                                        <i class="fas fa-save" aria-hidden="true"></i> Salvar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="card" id="divCamposReferencias2">
@@ -181,6 +266,16 @@
                             {{ form_row(form.referencia2Relacao) }}
                             {{ form_row(form.referencia2Telefone1) }}
                             {{ form_row(form.referencia2Telefone2) }}
+                        </div>
+                        <div class="card-footer">
+                            <div class="row">
+                                <div class="col text-right">
+                                    <button type="button" class="btn btn-primary btn-lg btnSalvarAnchored"
+                                            data-div="divCamposReferencias2" value="Salvar">
+                                        <i class="fas fa-save" aria-hidden="true"></i> Salvar
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -199,11 +294,47 @@
                             {{ form_row(form.ensinoDemaisObs) }}
 
                         </div>
+                        <div class="card-footer">
+                            <div class="row">
+                                <div class="col text-right">
+                                    <button type="button" class="btn btn-primary btn-lg btnSalvarAnchored"
+                                            data-div="divCamposEstudo" value="Salvar">
+                                        <i class="fas fa-save" aria-hidden="true"></i> Salvar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
+                    <div class="card" id="divCamposEmpregos">
+                        <h5 class="card-header">Empregos Anteriores</h5>
+                        <div class="card-body">
+                            {{ form_row(form.jaTrabalhou) }}
 
-                    {{ form_row(form.conheceAEmpresaTempo) }}
-                    {{ form_row(form.ehNossoCliente) }}
+                            <div style="display: none;" id="divQtdeEmpregos">
+                                {{ form_row(form.qtdeEmpregos) }}
+                            </div>
+
+                            <span id="dadosEmpregosJSON" style="display: none;">{{ dadosEmpregosJSON|raw }}</span>
+
+                            <div id="dadosEmpregos" style="display: none;">
+
+                            </div>
+
+
+                        </div>
+                        <div class="card-footer">
+                            <div class="row">
+                                <div class="col text-right">
+                                    <button type="button" class="btn btn-primary btn-lg btnSalvarAnchored"
+                                            data-div="divCamposEmpregos" value="Salvar">
+                                        <i class="fas fa-save" aria-hidden="true"></i> Salvar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
 
                     <div class="card" id="divCamposFamiliaresCrediario">
                         <h5 class="card-header">Familiares com cadastro em nosso crediário</h5>
@@ -211,26 +342,36 @@
                             {{ form_row(form.parente1FichaCrediarioNome) }}
                             {{ form_row(form.parente2FichaCrediarioNome) }}
                         </div>
+                        <div class="card-footer">
+                            <div class="row">
+                                <div class="col text-right">
+                                    <button type="button" class="btn btn-primary btn-lg btnSalvarAnchored"
+                                            data-div="divCamposFamiliaresCrediario" value="Salvar">
+                                        <i class="fas fa-save" aria-hidden="true"></i> Salvar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="card" id="divCamposFamiliaresCrediario">
+                    <div class="card" id="divCamposConhecidosLoja">
                         <h5 class="card-header">Conhecidos que já trabalharam ou ainda trabalham em nossa empresa</h5>
                         <div class="card-body">
                             {{ form_row(form.conhecido1TrabalhouNaEmpresa) }}
                             {{ form_row(form.conhecido2TrabalhouNaEmpresa) }}
                         </div>
-                    </div>
-
-                    {{ form_row(form.motivosQuerTrabalharAqui) }}
-
-
-                    <div class="row">
-                        <div class="col text-right">
-                            <button type="submit" class="btn btn-primary btn-lg" value="Salvar">
-                                <i class="fas fa-save" aria-hidden="true"></i> Salvar
-                            </button>
+                        <div class="card-footer">
+                            <div class="row">
+                                <div class="col text-right">
+                                    <button type="button" class="btn btn-primary btn-lg btnSalvarAnchored"
+                                            data-div="divCamposConhecidosLoja" value="Salvar">
+                                        <i class="fas fa-save" aria-hidden="true"></i> Salvar
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
 
 
                     {{ form_end(form, {'render_rest': false}) }}

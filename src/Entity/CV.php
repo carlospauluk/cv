@@ -199,7 +199,7 @@ class CV
     /**
      * @var string
      *
-     * @ORM\Column(name="estado_civil", type="string", length=2, nullable=false, options={"fixed"=true})
+     * @ORM\Column(name="estado_civil", type="string", length=50, nullable=false)
      */
     private $estadoCivil;
 
@@ -223,6 +223,13 @@ class CV
      * @ORM\Column(name="tem_filhos", type="string", length=1, nullable=false, options={"fixed"=true})
      */
     private $temFilhos;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="qtde_filhos", type="integer", nullable=true)
+     */
+    private $qtdeFilhos;
 
     /**
      * @var string|null
@@ -422,6 +429,20 @@ class CV
      * @ORM\Column(name="senha_temp", type="string", length=200, nullable=true)
      */
     private $senhaTemp;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="ja_trabalhou", type="string", length=1, nullable=false, options={"fixed"=true})
+     */
+    private $jaTrabalhou;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="qtde_empregos", type="integer", nullable=true)
+     */
+    private $qtdeEmpregos;
 
     /**
      *
@@ -955,6 +976,23 @@ class CV
     }
 
     /**
+     * @return int
+     */
+    public function getQtdeFilhos(): ?int
+    {
+        return $this->qtdeFilhos;
+    }
+
+    /**
+     * @param int $qtdeFilhos
+     */
+    public function setQtdeFilhos(?int $qtdeFilhos): void
+    {
+        $this->qtdeFilhos = $qtdeFilhos;
+    }
+
+
+    /**
      *
      * @return Collection|CVFilho[]
      */
@@ -1418,6 +1456,38 @@ class CV
     public function getExperProfis(): Collection
     {
         return $this->experProfis;
+    }
+
+    /**
+     * @return string
+     */
+    public function getJaTrabalhou(): ?string
+    {
+        return $this->jaTrabalhou;
+    }
+
+    /**
+     * @param string $jaTrabalhou
+     */
+    public function setJaTrabalhou(?string $jaTrabalhou): void
+    {
+        $this->jaTrabalhou = $jaTrabalhou;
+    }
+
+    /**
+     * @return int
+     */
+    public function getQtdeEmpregos(): ?int
+    {
+        return $this->qtdeEmpregos;
+    }
+
+    /**
+     * @param int $qtdeEmpregos
+     */
+    public function setQtdeEmpregos(?int $qtdeEmpregos): void
+    {
+        $this->qtdeEmpregos = $qtdeEmpregos;
     }
 
     /**

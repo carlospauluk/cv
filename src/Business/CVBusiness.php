@@ -3,6 +3,8 @@
 namespace App\Business;
 
 use App\Entity\CV;
+use App\Entity\CVExperProfis;
+use App\Entity\CVFilho;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Swift_Mailer;
@@ -178,13 +180,38 @@ class CVBusiness extends BaseBusiness
     }
 
     /**
+     * @param $cvId
+     * @param $senhaAtual
+     * @param $novaSenha
+     * @throws ORMException
+     * @throws OptimisticLockException
+     */
+    public function alterarSenha($cvId, $senhaAtual, $novaSenha)
+    {
+        $cv = $this->getDoctrine()->getRepository(CV::class)->find($cvId);
+        if (!$cv) {
+            throw new \Exception('Cadastro não encontrado.');
+        }
+        $passwordEncoder = new Pbkdf2PasswordEncoder();
+        if (!$passwordEncoder->isPasswordValid($cv->getSenha(), $senhaAtual, $cv->getCpf())) {
+            throw new \Exception('Senha atual inválida.');
+        } else {
+            $novaSenhaHash = $passwordEncoder->encodePassword($novaSenha, $cv->getCpf());
+            $cv->setSenha($novaSenhaHash);
+            $this->getDoctrine()->getEntityManager()->flush();
+        }
+
+    }
+
+    /**
      * Salvar o CV na base.
      *
      * @param CV $cv
      * @return bool
      * @throws \Exception
      */
-    public function saveCv(CV $cv) {
+    public function saveCv(CV $cv)
+    {
         try {
             $cv->setUpdated(new \DateTime());
             $this->getDoctrine()->getEntityManager()->merge($cv);
@@ -194,6 +221,120 @@ class CVBusiness extends BaseBusiness
             // FIXME: melhorar a mensagem.
             throw new \Exception('Erro ao salvar os dados. Por favor, entre em contato com o suporte.');
         }
+    }
+
+    /**
+     * @param CV $cv
+     * @param $arrFilhos
+     * @return CV
+     * @throws \Exception
+     */
+    public function saveFilhos(CV $cv, $arrFilhos)
+    {
+        try {
+            $cv->getFilhos()->clear();
+            $this->getDoctrine()->getEntityManager()->flush();
+            foreach ($arrFilhos as $filho) {
+                $cvFilho = new CVFilho();
+                $cvFilho->setCv($cv);
+                $cvFilho->setInserted(new \DateTime());
+                $cvFilho->setUpdated(new \DateTime());
+                $cvFilho->setNome($filho['nome']);
+                $cvFilho->setDtNascimento(\DateTime::createFromFormat('d/m/Y', $filho['dtNascimento']));
+                $cvFilho->setOcupacao($filho['ocupacao']);
+                $cvFilho->setObs($filho['obs']);
+                $this->getDoctrine()->getEntityManager()->persist($cvFilho);
+                $this->getDoctrine()->getEntityManager()->flush();
+            }
+            $this->getDoctrine()->getEntityManager()->refresh($cv);
+            return $cv;
+        } catch (ORMException $e) {
+            throw new \Exception('Erro ao salvar dados dos filhos.');
+        }
+    }
+
+    /**
+     *
+     * @param CV $cv
+     * @return false|string
+     */
+    public function dadosFilhos2JSON(CV $cv)
+    {
+        $dadosFilhosJSON = [];
+        if ($cv and $cv->getFilhos()) {
+            foreach ($cv->getFilhos() as $filho) {
+                $d['nome'] = $filho->getNome();
+                $d['dtNascimento'] = $filho->getDtNascimento()->format('Y-m-d');
+                $d['ocupacao'] = $filho->getOcupacao();
+                $d['obs'] = $filho->getObs();
+                $dadosFilhosJSON[] = $d;
+            }
+        }
+        return json_encode($dadosFilhosJSON);
+    }
+
+    /**
+     * @param CV $cv
+     * @param $arrFilhos
+     * @return CV
+     * @throws \Exception
+     */
+    public function saveEmpregos(CV $cv, $arrEmpregos)
+    {
+        try {
+            $cv->getExperProfis()->clear();
+            $this->getDoctrine()->getEntityManager()->flush();
+            foreach ($arrEmpregos as $emprego) {
+                if ($emprego['nomeEmpresa']) {
+                    $cvExperProfiss = new CVExperProfis();
+                    $cvExperProfiss->setCv($cv);
+                    $cvExperProfiss->setInserted(new \DateTime());
+                    $cvExperProfiss->setUpdated(new \DateTime());
+                    $cvExperProfiss->setNomeEmpresa($emprego['nomeEmpresa']);
+                    $cvExperProfiss->setLocalEmpresa($emprego['localEmpresa']);
+                    $cvExperProfiss->setNomeSuperior($emprego['nomeSuperior']);
+                    $cvExperProfiss->setCargo($emprego['cargo']);
+                    $cvExperProfiss->setHorario($emprego['horario']);
+                    $cvExperProfiss->setAdmissao($emprego['admissao'] ? \DateTime::createFromFormat('d/m/Y', $emprego['admissao']) : null);
+                    $cvExperProfiss->setDemissao($emprego['demissao'] ? \DateTime::createFromFormat('d/m/Y', $emprego['demissao']) : null);
+                    $cvExperProfiss->setUltimoSalario(isset($emprego['ultimoSalario']) ? (new \NumberFormatter(\Locale::getDefault(), \NumberFormatter::DECIMAL))->parse($emprego['ultimoSalario']) : null);
+                    $cvExperProfiss->setBeneficios($emprego['beneficios']);
+                    $cvExperProfiss->setMotivoDesligamento($emprego['motivoDesligamento']);
+                    $this->getDoctrine()->getEntityManager()->persist($cvExperProfiss);
+                    $this->getDoctrine()->getEntityManager()->flush();
+                }
+            }
+            $this->getDoctrine()->getEntityManager()->refresh($cv);
+            return $cv;
+        } catch (ORMException $e) {
+            throw new \Exception('Erro ao salvar dados dos filhos.');
+        }
+    }
+
+    /**
+     *
+     * @param CV $cv
+     * @return false|string
+     */
+    public function dadosEmpregos2JSON(CV $cv)
+    {
+        $dadosEmpregosJSON = [];
+        if ($cv and $cv->getExperProfis()) {
+            foreach ($cv->getExperProfis() as $emprego) {
+                $d['nomeEmpresa'] = $emprego->getNomeEmpresa();
+                $d['localEmpresa'] = $emprego->getLocalEmpresa();
+                $d['nomeSuperior'] = $emprego->getNomeSuperior();
+                $d['horario'] = $emprego->getHorario();
+                $d['cargo'] = $emprego->getCargo();
+                $d['admissao'] = $emprego->getAdmissao() instanceof \DateTime ? $emprego->getAdmissao()->format('d/m/Y') : '';
+                $d['demissao'] = $emprego->getDemissao() instanceof \DateTime ? $emprego->getDemissao()->format('d/m/Y') : '';
+                $d['ultimoSalario'] = $emprego->getUltimoSalario();
+                $d['beneficios'] = $emprego->getBeneficios();
+                $d['motivoDesligamento'] = $emprego->getMotivoDesligamento();
+                $dadosEmpregosJSON[] = $d;
+            }
+        }
+        return json_encode($dadosEmpregosJSON);
     }
 
     /**

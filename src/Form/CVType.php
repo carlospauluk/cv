@@ -8,10 +8,12 @@ use App\Utils\Repository\WhereBuilder;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -70,6 +72,20 @@ class CVType extends AbstractType
             ),
             'required' => true
         ));
+
+        $builder->get('cpf')
+            ->addModelTransformer(new CallbackTransformer(
+                function ($obj) {
+                    // transform the array to a string
+                    return $obj;
+                },
+                function ($str) {
+                    // transform the string back to an array
+                    // return explode(', ', $str);
+                    return preg_replace('/[^\d]/', '', $str);
+                }
+            ))
+        ;
 
         $builder->add('email', EmailType::class, array(
             'label' => 'E-mail',
@@ -209,6 +225,11 @@ class CVType extends AbstractType
             'required' => false
         ));
 
+        $builder->add('qtdeFilhos', IntegerType::class, array(
+            'label' => 'Qtde Filhos',
+            'required' => false
+        ));
+
         $builder->add('paiNome', TextType::class, array(
             'label' => 'Nome do pai',
             'required' => false,
@@ -283,6 +304,7 @@ class CVType extends AbstractType
             'label' => 'Ensino Fundamental',
             'choices' => array(
                 'Não cursado' => 'NC',
+                'Cursando' => 'CR',
                 'Incompleto' => 'I',
                 'Concluído' => 'C'
             ),
@@ -297,6 +319,7 @@ class CVType extends AbstractType
             'label' => 'Ensino Médio',
             'choices' => array(
                 'Não cursado' => 'NC',
+                'Cursando' => 'CR',
                 'Incompleto' => 'I',
                 'Concluído' => 'C'
             ),
@@ -311,14 +334,16 @@ class CVType extends AbstractType
             'label' => 'Ensino Superior',
             'choices' => array(
                 'Não cursado' => 'NC',
+                'Cursando' => 'CR',
                 'Incompleto' => 'I',
                 'Concluído' => 'C'
             ),
             'required' => false
         ));
         $builder->add('ensinoSuperiorLocal', TextType::class, array(
-            'label' => 'Escola',
-            'required' => false
+            'label' => 'Faculdade/Curso',
+            'required' => false,
+            'required' => 'Informar a faculdade e o curso'
         ));
 
         $builder->add('ensinoDemaisObs', TextareaType::class, array(
@@ -367,16 +392,19 @@ class CVType extends AbstractType
         ));
 
 
+        $builder->add('jaTrabalhou', ChoiceType::class, array(
+            'label' => 'Já trabalhou?',
+            'choices' => array(
+                'Sim' => 'S',
+                'Não' => 'N'
+            ),
+            'required' => false
+        ));
 
-
-
-
-
-
-
-
-
-
+        $builder->add('qtdeEmpregos', IntegerType::class, array(
+            'label' => 'Qtde Empregos',
+            'required' => false
+        ));
 
 
 
