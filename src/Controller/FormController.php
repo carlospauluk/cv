@@ -61,7 +61,7 @@ class FormController extends Controller
             } else if ($request->get('btnNovo')) {
                 // estava no 'iniciar' e clicou em 'Novo'
                 $this->handleNovo($request, $vParams);
-                if ($vParams['cadastroIniciado']) {
+                if (isset($vParams['cadastroIniciado']) and $vParams['cadastroIniciado']) {
                     $this->addFlash('info', 'E-mail enviado. Verifique sua Caixa de Entrada ou o Spam.');
                     $step = 'login';
                 } else {

@@ -48,8 +48,12 @@ class CVBusiness extends BaseBusiness
         try {
             $this->getDoctrine()->getEntityManager()->beginTransaction();
             $cv = $this->getDoctrine()->getRepository(CV::class)->findOneBy(['cpf' => $cpf]);
-            if (!$cv) {
-                $cv = new CV();
+            if ($cv) {
+                throw new \Exception('CPF já cadastrado');
+            }
+            $cv = $this->getDoctrine()->getRepository(CV::class)->findOneBy(['email' => $email]);
+            if ($cv) {
+                throw new \Exception('E-mail já cadastrado');
             }
             $cv->setCpf($cpf);
             $cv->setEmail($email);
@@ -72,7 +76,7 @@ class CVBusiness extends BaseBusiness
             $this->getDoctrine()->getEntityManager()->commit();
         } catch (\Exception $e) {
             $this->getDoctrine()->getEntityManager()->rollback();
-            throw new \Exception('Erro ao salvar registro.', 0, $e);
+            throw $e;
         }
     }
 
