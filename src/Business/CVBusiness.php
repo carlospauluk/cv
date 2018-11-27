@@ -317,7 +317,7 @@ class CVBusiness extends BaseBusiness
             $this->getDoctrine()->getEntityManager()->flush();
 
             $session = new Session();
-            $session->set('cvId', $cv->getId()); // o cvId no session define o status de logado
+            $session->set('cvId', $novoCv->getId()); // o cvId no session define o status de logado
 
 
             return true;
