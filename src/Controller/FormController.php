@@ -29,6 +29,8 @@ class FormController extends Controller
      * @param Request $request
      * @param string $step
      * @return \Symfony\Component\HttpFoundation\Response
+     * @throws ORMException
+     * @throws OptimisticLockException
      */
     public function inicio(Request $request, $step = "land")
     {

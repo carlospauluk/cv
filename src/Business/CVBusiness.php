@@ -64,6 +64,7 @@ class CVBusiness extends BaseBusiness
             if ($cv) {
                 throw new \Exception('E-mail já cadastrado');
             }
+            $cv = new CV();
             $cv->setCpf($cpf);
             $cv->setEmail($email);
             $passwordEncoder = new Pbkdf2PasswordEncoder();
