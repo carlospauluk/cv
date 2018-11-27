@@ -6,6 +6,7 @@
     "bootstrap": ">=4.1.2",
     "copy-webpack-plugin": "^4.6.0",
     "datatables": "^1.10.18",
+    "dropzone": "^5.5.1",
     "flag-icon": "^2.5.0",
     "flag-icon-css": "^3.2.1",
     "jquery": "^3.3.1",

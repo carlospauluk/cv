@@ -1,0 +1,11 @@
+vich_uploader:
+    db_driver: orm
+
+    mappings:
+        fotos3x4:
+            uri_prefix: /images/fotos3x4
+            upload_destination: '%kernel.project_dir%/public/images/fotos3x4'
+            namer: Vich\UploaderBundle\Naming\UniqidNamer
+            inject_on_load: false
+            delete_on_update: true
+            delete_on_remove: true

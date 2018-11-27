@@ -2,8 +2,12 @@
 
 import $ from "jquery";
 
+import Dropzone from 'dropzone';
+import 'dropzone/dist/dropzone.css'
 
 import CrosierMasks from './crosier/CrosierMasks';
+
+import toastr from 'toastr';
 
 $(document).ready(function () {
 
@@ -239,6 +243,61 @@ $(document).ready(function () {
         $form.submit();
     });
 
+
+
+    function buildDropZone() {
+
+        if ($('#divDropzone').length) {
+
+            let dropzone = new Dropzone("#divDropzone",
+                {
+                    previewTemplate: $('#dzTemplate').html(),
+                    clickable: '#dz-clickable',
+                    url: "/uploadFoto",
+                    maxFilesize: 6,
+                    maxFiles: 1,
+                    acceptedFiles: 'image/*',
+                    resizeWidth: 800,
+                    dictDefaultMessage: 'dictDefaultMessage',
+                    dictFallbackMessage: 'dictFallbackMessage',
+                    dictFallbackText: 'dictFallbackText',
+                    dictFileTooBig: 'dictFileTooBig',
+                    dictInvalidFileType: 'dictInvalidFileType',
+                    dictResponseError: 'dictResponseError',
+                    dictCancelUpload: 'dictCancelUpload',
+                    dictUploadCanceled: 'dictUploadCanceled',
+                    dictCancelUploadConfirmation: 'dictCancelUploadConfirmation',
+                    dictRemoveFile: 'dictRemoveFile',
+                    dictRemoveFileConfirmation: 'dictRemoveFileConfirmation',
+                    dictMaxFilesExceeded: 'dictMaxFilesExceeded',
+                    dictFileSizeUnits: 'dictFileSizeUnits'
+                });
+
+            dropzone.on("addedfile", function (file) {
+                if (file.size > (2 * 1024 * 1024)) {
+                    console.log('muito grande');
+                    toastr.warning('Arquivo muito grande. Máximo: 6MB!');
+                    this.removeFile(file);
+                } else {
+                    $('#dz-clickable').css('display', 'none');
+                }
+            });
+            dropzone.on("removedfile", function (file) {
+                $('#dz-clickable').css('display', '');
+            });
+            dropzone.on("maxfilesexceeded", function (file) {
+                this.removeFile(file);
+            });
+
+
+            window.dzRemoveAll = function () {
+                dropzone.removeAllFiles(true);
+                $.post('/deleteFoto');
+            }
+        }
+
+    }
+
     // --------
 
     showCamposFilhos();
@@ -246,6 +305,8 @@ $(document).ready(function () {
 
     showCamposEmpregos();
     buildCamposEmpregos();
+
+    buildDropZone();
 
 
 });

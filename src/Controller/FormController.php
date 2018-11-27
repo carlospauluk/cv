@@ -8,6 +8,7 @@ use App\Form\CVType;
 use Psr\Log\LoggerInterface;
 use ReCaptcha\ReCaptcha;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Annotation\Route;
@@ -34,6 +35,7 @@ class FormController extends Controller
         $vParams = [];
 
         $vParams['cpf'] = preg_replace('/[^\d]/', '', $request->get('cpf'));
+
         $vParams['email'] = $request->get('email');
         $vParams['password'] = $request->get('password');
         $vParams['password2'] = $request->get('password2');
@@ -74,6 +76,7 @@ class FormController extends Controller
                 $step = 'login';
             }
         }
+
         $vParams['step'] = $step;
         return $this->render('landpage.html.twig', $vParams);
     }
@@ -87,21 +90,25 @@ class FormController extends Controller
      */
     private function handleInicio(Request $request, &$vParams)
     {
-        if (!$request->get('g-recaptcha-response')) {
-            $this->addFlash('error', 'Você é um robô?');
+        if (!$this->getCvBusiness()->validaCPF($vParams['cpf'])) {
+            $this->addFlash('error', 'CPF inválido');
         } else {
-            $secret = getenv('GOOGLE_RECAPTCHA_SECRET');
-            $gRecaptchaResponse = $request->get('g-recaptcha-response');
-            $recaptcha = new ReCaptcha($secret);
-            $urlSistema = getenv('URL_SISTEMA');
-            $resp = $recaptcha->setExpectedHostname($urlSistema)
-                ->verify($gRecaptchaResponse, $request->server->get('REMOTE_ADDR'));
-            if (!$resp->isSuccess()) {
-//                $errors = $resp->getErrorCodes();
-                $this->addFlash('error', 'Você é um robô ou não??');
+            if (!$request->get('g-recaptcha-response')) {
+                $this->addFlash('error', 'Você é um robô?');
             } else {
-                $cadastroOk = $this->getCvBusiness()->checkCadastroOk($vParams['cpf']);
-                $vParams['cadastroOk'] = $cadastroOk;
+                $secret = getenv('GOOGLE_RECAPTCHA_SECRET');
+                $gRecaptchaResponse = $request->get('g-recaptcha-response');
+                $recaptcha = new ReCaptcha($secret);
+                $urlSistema = getenv('URL_SISTEMA');
+                $resp = $recaptcha->setExpectedHostname($urlSistema)
+                    ->verify($gRecaptchaResponse, $request->server->get('REMOTE_ADDR'));
+                if (!$resp->isSuccess()) {
+//                $errors = $resp->getErrorCodes();
+                    $this->addFlash('error', 'Você é um robô ou não??');
+                } else {
+                    $cadastroOk = $this->getCvBusiness()->checkCadastroOk($vParams['cpf']);
+                    $vParams['cadastroOk'] = $cadastroOk;
+                }
             }
         }
     }
@@ -252,6 +259,7 @@ class FormController extends Controller
 
         // Pode ou não ter vindo algo no $parameters. Independentemente disto, só adiciono form e foi-se.
         $vParams['form'] = $form->createView();
+        $vParams['foto'] = $cv->getFoto();
 
         $vParams['dadosFilhosJSON'] = $this->getCvBusiness()->dadosFilhos2JSON($cv);
         $vParams['dadosEmpregosJSON'] = $this->getCvBusiness()->dadosEmpregos2JSON($cv);
@@ -292,7 +300,55 @@ class FormController extends Controller
         }
 
         return $this->render('alterarSenha.html.twig', $vParams);
+    }
 
+    /**
+     *
+     * @Route("/uploadFoto", name="uploadFoto")
+     * @param Request $request
+     * @return JsonResponse|\Symfony\Component\HttpFoundation\RedirectResponse
+     */
+    public function uploadFoto(Request $request)
+    {
+        $output = ['uploaded' => false];
+        if ($request->files->get('file')) {
+            $file = $request->files->get('file');
+            $session = $request->hasSession() ? $request->getSession() : new Session();
+            $cvId = $session->get('cvId');
+            if ($cvId) {
+                $cv = $this->getDoctrine()->getRepository(CV::class)->find($cvId);
+                $cv->setFotoFile($request->files->get('file'));
+                $this->getDoctrine()->getManager()->flush();
+                $output['uploaded'] = true;
+            }
+        }
+        return new JsonResponse($output);
+    }
+
+    /**
+     *
+     * @Route("/deleteFoto", name="deleteFoto")
+     * @param Request $request
+     * @return JsonResponse|\Symfony\Component\HttpFoundation\RedirectResponse
+     */
+    public function deleteFoto(Request $request)
+    {
+        try {
+            $session = $request->hasSession() ? $request->getSession() : new Session();
+            $cvId = $session->get('cvId');
+            if ($cvId) {
+                $cv = $this->getDoctrine()->getRepository(CV::class)->find($cvId);
+                $this->get('vich_uploader.upload_handler')->remove($cv, 'fotoFile'); // https://github.com/dustin10/VichUploaderBundle/issues/323
+                $cv->setUpdated(new \DateTime());
+                $cv->setFoto(null);
+                $cv->setFotoFile(null);
+                // $this->getDoctrine()->getManager()->merge($cv);
+                $this->getDoctrine()->getManager()->flush();
+                return $this->redirectToRoute('cv');
+            }
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Ocorreu um erro ao remover a foto.');
+        }
     }
 
 
