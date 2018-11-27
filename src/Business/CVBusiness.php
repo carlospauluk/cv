@@ -134,10 +134,12 @@ class CVBusiness extends BaseBusiness
      */
     public function login($cpf, $password)
     {
-        $cv = $this->getDoctrine()->getRepository(CV::class)->findOneBy(['cpf' => $cpf]);
+        // Pega sempre a última versão
+        $cv = $this->getDoctrine()->getRepository(CV::class)->findBy(['cpf' => $cpf], ['versao' => 'DESC']);
         if (!$cv) {
             throw new \Exception('Cadastro não encontrado.');
         }
+        $cv = $cv[0];
         $passwordEncoder = new Pbkdf2PasswordEncoder();
         if ($passwordEncoder->isPasswordValid($cv->getSenha(), $password, $cpf)) {
             // Primeiro testa com a senha normal.
@@ -163,7 +165,7 @@ class CVBusiness extends BaseBusiness
      *
      * @param $cvId
      * @param $uuid
-     * @return bool
+     * @return object
      * @throws ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
@@ -220,6 +222,96 @@ class CVBusiness extends BaseBusiness
         } catch (ORMException $e) {
             // FIXME: melhorar a mensagem.
             throw new \Exception('Erro ao salvar os dados. Por favor, entre em contato com o suporte.');
+        }
+    }
+
+    /**
+     * Seta o campo status = 'F' para não permitir mais edições.
+     *
+     * @param CV $cv
+     * @return bool
+     * @throws \Exception
+     */
+    public function fechar(CV $cv)
+    {
+        try {
+            $cv->setUpdated(new \DateTime());
+            $cv->setStatus('F');
+            $this->getDoctrine()->getEntityManager()->merge($cv);
+            $this->getDoctrine()->getEntityManager()->flush();
+            return true;
+        } catch (ORMException $e) {
+            // FIXME: melhorar a mensagem.
+            throw new \Exception('Erro ao salvar os dados. Por favor, entre em contato com o suporte.');
+        }
+    }
+
+    /**
+     * Cria uma nova versão para poder editar novamente.
+     *
+     * @param CV $cv
+     * @return bool
+     * @throws \Exception
+     */
+    public function versionar(CV $cv)
+    {
+        try {
+            // Se já estiver aberto, não tem pq versionar
+            if ($cv->getStatus() == 'A') {
+                return true;
+            }
+
+            // Verifica qual é o último CV. Se ainda estiver aberto, não tem pq versionar.
+            $ultimoCv = $this->getDoctrine()->getRepository(CV::class)->findBy(['cpf' => $cv->getCpf()], ['versao' => 'DESC']);
+            if (!$ultimoCv) {
+                throw new \Exception('Cadastro não encontrado.');
+            }
+            $ultimoCv = $ultimoCv[0];
+            if ($ultimoCv->getStatus() == 'A') {
+                return true;
+            }
+
+
+            $novoCv = clone $cv;
+            $novoCv->setId(null);
+            $novoCv->setUpdated(new \DateTime());
+            $novoCv->setStatus('A');
+            $novoCv->setVersao($cv->getVersao() + 1);
+            $filhos = clone $cv->getFilhos();
+            $experProfi = clone $cv->getExperProfis();
+            $filhos->clear();
+            $experProfi->clear();
+            $novoCv->setFilhos($filhos);
+            $novoCv->setExperProfis($experProfi);
+
+            $this->getDoctrine()->getEntityManager()->persist($novoCv);
+
+            foreach ($cv->getFilhos() as $filho) {
+                $novoFilho = clone $filho;
+                $novoFilho->setCv($novoCv);
+                $novoFilho->setInserted(new \DateTime());
+                $novoFilho->setUpdated(new \DateTime());
+                $this->getDoctrine()->getEntityManager()->persist($novoFilho);
+            }
+            foreach ($cv->getExperProfis() as $experProfi) {
+                $novaExperProfi = clone $experProfi;
+                $novaExperProfi->setCv($novoCv);
+                $novaExperProfi->setInserted(new \DateTime());
+                $novaExperProfi->setUpdated(new \DateTime());
+                $this->getDoctrine()->getEntityManager()->persist($novaExperProfi);
+            }
+
+            $this->getDoctrine()->getEntityManager()->flush();
+
+            $session = new Session();
+            $session->set('cvId', $cv->getId()); // o cvId no session define o status de logado
+
+
+            return true;
+
+        } catch (ORMException $e) {
+            // FIXME: melhorar a mensagem.
+            throw new \Exception('Erro ao gerar nova versão. Por favor, entre em contato com o suporte.');
         }
     }
 

@@ -86,7 +86,7 @@ class FormController extends Controller
      *
      * @param Request $request
      * @param $vParams
-     * @return bool
+     * @return void
      */
     private function handleInicio(Request $request, &$vParams)
     {
@@ -159,7 +159,7 @@ class FormController extends Controller
      *
      * @Route("/logout", name="logout")
      * @param Request $request
-     * @return void
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse
      */
     public function logout(Request $request)
     {
@@ -260,12 +260,57 @@ class FormController extends Controller
         // Pode ou não ter vindo algo no $parameters. Independentemente disto, só adiciono form e foi-se.
         $vParams['form'] = $form->createView();
         $vParams['foto'] = $cv->getFoto();
+        $vParams['status'] = $cv->getStatus();
+        $vParams['versao'] = $cv->getVersao();
 
         $vParams['dadosFilhosJSON'] = $this->getCvBusiness()->dadosFilhos2JSON($cv);
         $vParams['dadosEmpregosJSON'] = $this->getCvBusiness()->dadosEmpregos2JSON($cv);
 
         return $this->render('cv.html.twig', $vParams);
+    }
 
+    /**
+     *
+     * @Route("/fechar", name="fechar")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function fechar(Request $request)
+    {
+        try {
+            $session = $request->hasSession() ? $request->getSession() : new Session();
+            $cvId = $session->get('cvId');
+            if (!$cvId) {
+                return $this->redirectToRoute('inicio');
+            }
+            $cv = $this->getDoctrine()->getRepository(CV::class)->find($cvId);
+            $this->getCvBusiness()->fechar($cv);
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Erro ao finalizar.');
+        }
+        return $this->redirectToRoute('cv');
+    }
+
+    /**
+     *
+     * @Route("/versionar", name="versionar")
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function versionar(Request $request)
+    {
+        try {
+            $session = $request->hasSession() ? $request->getSession() : new Session();
+            $cvId = $session->get('cvId');
+            if (!$cvId) {
+                return $this->redirectToRoute('inicio');
+            }
+            $cv = $this->getDoctrine()->getRepository(CV::class)->find($cvId);
+            $this->getCvBusiness()->versionar($cv);
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Erro ao modificar.');
+        }
+        return $this->redirectToRoute('cv');
     }
 
     /**

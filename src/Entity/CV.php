@@ -16,7 +16,7 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
  * CV.
  * Registra os CVs.
  *
- * @ORM\Table(name="cv", uniqueConstraints={@ORM\UniqueConstraint(name="UK_cv_cpf", columns={"cpf"})})
+ * @ORM\Table(name="cv", uniqueConstraints={@ORM\UniqueConstraint(name="UK_cv_cpf", columns={"cpf","versao"})})
  * @ORM\Entity(repositoryClass="App\Repository\CVRepository")
  * @Vich\Uploadable()
  */
@@ -67,7 +67,7 @@ class CV
     private $dtNascimento;
 
     /**
-     * @var int
+     * @var string
      *
      * @ORM\Column(name="naturalidade", type="string", length=100, nullable=true)
      */
@@ -512,6 +512,22 @@ class CV
      */
     private $foto;
 
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="versao", type="integer", nullable=false)
+     */
+    private $versao = 1;
+
+    /**
+     * 'A': Aberto (ainda aceita edições).
+     * 'F': Fechado (só permite edições se gerar nova versão).
+     * @var string
+     *
+     * @ORM\Column(name="status", type="string", length=1, nullable=false, options={"fixed"=true})
+     */
+    private $status = 'A';
+
 
     /**
      *
@@ -533,7 +549,7 @@ class CV
     /**
      * @return int
      */
-    public function getId(): int
+    public function getId(): ?int
     {
         return $this->id;
     }
@@ -541,7 +557,7 @@ class CV
     /**
      * @param int $id
      */
-    public function setId(int $id): void
+    public function setId(?int $id): void
     {
         $this->id = $id;
     }
@@ -1011,14 +1027,20 @@ class CV
         $this->qtdeFilhos = $qtdeFilhos;
     }
 
-
     /**
-     *
-     * @return Collection|CVFilho[]
+     * @return CVFilho[]|ArrayCollection
      */
     public function getFilhos(): Collection
     {
         return $this->filhos;
+    }
+
+    /**
+     * @param Collection|null $filhos
+     */
+    public function setFilhos(?Collection $filhos): void
+    {
+        $this->filhos = $filhos;
     }
 
     /**
@@ -1470,12 +1492,19 @@ class CV
     }
 
     /**
-     *
-     * @return Collection|CVExperProfis[]
+     * @return CVExperProfis[]|ArrayCollection
      */
     public function getExperProfis(): Collection
     {
         return $this->experProfis;
+    }
+
+    /**
+     * @param Collection|null $experProfis
+     */
+    public function setExperProfis(?Collection $experProfis): void
+    {
+        $this->experProfis = $experProfis;
     }
 
     /**
@@ -1594,6 +1623,38 @@ class CV
     public function getFoto(): ?string
     {
         return $this->foto;
+    }
+
+    /**
+     * @return int
+     */
+    public function getVersao(): int
+    {
+        return $this->versao;
+    }
+
+    /**
+     * @param int $versao
+     */
+    public function setVersao(int $versao): void
+    {
+        $this->versao = $versao;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    /**
+     * @param string $status
+     */
+    public function setStatus(string $status): void
+    {
+        $this->status = $status;
     }
 
 

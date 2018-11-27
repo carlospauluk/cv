@@ -298,6 +298,17 @@ $(document).ready(function () {
 
     }
 
+    function checkStatus() {
+        // pega o status do <span>
+        let status = $('#cvStatus').html();
+        if (status === 'F') {
+            // escondo todos os botões de ação
+            $('.CV_BTN_ACTION').css('display','none');
+            // desabilito todos os inputs (isso por causa dos gerados dinamicamente, pois os fixos são desabilitados no CVType)
+            $('input[type=text]').attr('disabled', 'true');
+        }
+    }
+
     // --------
 
     showCamposFilhos();
@@ -307,6 +318,8 @@ $(document).ready(function () {
     buildCamposEmpregos();
 
     buildDropZone();
+
+    checkStatus();
 
 
 });
