@@ -615,7 +615,7 @@ class CV
      */
     public function getCpf(): string
     {
-        return $this->cpf;
+        return preg_replace('/\D/','',$this->cpf);
     }
 
     /**
@@ -623,7 +623,7 @@ class CV
      */
     public function setCpf(string $cpf): void
     {
-        $this->cpf = $cpf;
+        $this->cpf = preg_replace('/\D/','',$cpf);;
     }
 
     /**
