@@ -4,7 +4,10 @@ namespace App\Controller;
 
 use App\Business\CVBusiness;
 use App\Entity\CV;
+use App\Exception\ViewException;
 use App\Form\CVType;
+use Doctrine\ORM\OptimisticLockException;
+use Doctrine\ORM\ORMException;
 use Psr\Log\LoggerInterface;
 use ReCaptcha\ReCaptcha;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -50,14 +53,17 @@ class FormController extends Controller
 
             if ($request->get('btnIniciar')) {
                 // estava no 'land' e clicou em 'Iniciar'
-                $this->handleInicio($request, $vParams);
-                if (!isset($vParams['cadastroOk'])) {
-                    $step = 'land';
-                } else if ($vParams['cadastroOk']) {
-                    $step = 'login';
-                } else {
-                    $step = 'iniciado';
+                try {
+                    $this->handleInicio($request, $vParams);
+                    if (!isset($vParams['cadastroOk'])) {
+                        $step = 'iniciado';
+                    } else {
+                        $step = 'login';
+                    }
+                } catch (ViewException $e) {
+                    $this->addFlash('error', $e->getMessage());
                 }
+
             } else if ($request->get('btnNovo')) {
                 // estava no 'iniciar' e clicou em 'Novo'
                 $this->handleNovo($request, $vParams);
@@ -87,6 +93,9 @@ class FormController extends Controller
      * @param Request $request
      * @param $vParams
      * @return void
+     * @throws ORMException
+     * @throws OptimisticLockException
+     * @throws ViewException
      */
     private function handleInicio(Request $request, &$vParams)
     {
@@ -104,7 +113,7 @@ class FormController extends Controller
                     ->verify($gRecaptchaResponse, $request->server->get('REMOTE_ADDR'));
                 if (!$resp->isSuccess()) {
 //                $errors = $resp->getErrorCodes();
-                    $this->addFlash('error', 'Você é um robô ou não??');
+                    throw new ViewException('Você é um robô ou não??');
                 } else {
                     $cadastroOk = $this->getCvBusiness()->checkCadastroOk($vParams['cpf']);
                     $vParams['cadastroOk'] = $cadastroOk;

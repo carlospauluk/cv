@@ -5,6 +5,7 @@ namespace App\Business;
 use App\Entity\CV;
 use App\Entity\CVExperProfis;
 use App\Entity\CVFilho;
+use App\Exception\ViewException;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Swift_Mailer;
@@ -24,14 +25,22 @@ class CVBusiness extends BaseBusiness
      *
      * @param $cpf
      * @return bool
+     * @throws ORMException
+     * @throws OptimisticLockException
+     * @throws ViewException
      */
     public function checkCadastroOk($cpf)
     {
         $cv = $this->getDoctrine()->getRepository(CV::class)->findOneBy(['cpf' => $cpf]);
-        if ($cv and $cv->getEmailConfirmado() == 'S') {
-            return true;
+        if ($cv) {
+            if ($cv->getEmailConfirmado() == 'S') {
+                return true;
+            } else {
+                $this->enviarEmailNovo($cv);
+                throw new ViewException('E-mail ainda não confirmado. Verifique sua Caixa de Entrada ou Spam.');
+            }
         } else {
-            return false;
+            return null;
         }
     }
 
