@@ -642,6 +642,13 @@ class CV
         $this->dtNascimento = $dtNascimento;
     }
 
+    public function getIdade() {
+        if (!$this->getDtNascimento()) return null;
+        $hj = new DateTime();
+        $diff = $hj->diff($this->getDtNascimento());
+        return $diff->y;
+    }
+
     /**
      * @return null|string
      */

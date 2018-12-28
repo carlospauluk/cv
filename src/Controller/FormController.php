@@ -239,8 +239,14 @@ class FormController extends Controller
         $vParams = [];
         $session = $request->hasSession() ? $request->getSession() : new Session();
         $cvId = $session->get('cvId');
+        $modoExibicao = false;
         if (!$cvId) {
-            return $this->redirectToRoute('inicio');
+            $cvId = $request->get("cvId");
+            if ($cvId) {
+                $modoExibicao = true;
+            } else {
+                return $this->redirectToRoute('inicio');
+            }
         }
         $cv = $this->getDoctrine()->getRepository(CV::class)->find($cvId);
 
@@ -270,9 +276,10 @@ class FormController extends Controller
 
         // Pode ou não ter vindo algo no $parameters. Independentemente disto, só adiciono form e foi-se.
         $vParams['form'] = $form->createView();
-        $vParams['foto'] = $cv->getFoto();
-        $vParams['status'] = $cv->getStatus();
-        $vParams['versao'] = $cv->getVersao();
+        $vParams['status'] = $modoExibicao == true ? 'F' : $cv->getStatus();
+        $vParams['cv'] = $cv;
+
+        $vParams['modoExibicao'] = $modoExibicao;
 
         $vParams['dadosFilhosJSON'] = $this->getCvBusiness()->dadosFilhos2JSON($cv);
         $vParams['dadosEmpregosJSON'] = $this->getCvBusiness()->dadosEmpregos2JSON($cv);
@@ -406,7 +413,6 @@ class FormController extends Controller
             $this->addFlash('error', 'Ocorreu um erro ao remover a foto.');
         }
     }
-
 
     /**
      * @return mixed
